@@ -9,12 +9,15 @@ import com.peergreen.webconsole.UIContext;
 import com.peergreen.webconsole.Unlink;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
+import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.core.notifier.INotifierService;
 import com.vaadin.ui.Component;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.InstanceStateListener;
+import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.Pojo;
+import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Handler;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -39,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +61,7 @@ public class ExtensionHandler extends DependencyHandler {
     private UIContext uiContext;
     private InstanceManager ownInstanceManager = new OwnInstanceManager();
     private INotifierService notifierService;
+    private List<String> notifications = new LinkedList<>();
 
     public void setOwnInstanceManager(InstanceManager instanceManager) {
         this.ownInstanceManager = instanceManager;
@@ -102,8 +107,27 @@ public class ExtensionHandler extends DependencyHandler {
     @Bind(aggregate = true, optional = true)
     public void bindExtensionFactory(ExtensionFactory extensionFactory, Dictionary properties) {
         if (canBindExtensionFactory(properties)) {
-            InstanceHandler instanceHandler = extensionFactory.create(uiContext);
-            instances.put(extensionFactory, instanceHandler);
+            InstanceHandler instanceHandler;
+            boolean failed = false;
+            try {
+                instanceHandler = extensionFactory.create(uiContext);
+                if (InstanceState.STOPPED.equals(instanceHandler.getState())) failed = true;
+                instances.put(extensionFactory, instanceHandler);
+            } catch (MissingHandlerException e) {
+                e.printStackTrace();
+                failed = true;
+            } catch (UnacceptableConfiguration unacceptableConfiguration) {
+                unacceptableConfiguration.printStackTrace();
+                failed = true;
+            } catch (ConfigurationException e) {
+                e.printStackTrace();
+                failed = true;
+            }
+            if (failed) {
+                String error = "Fail to add an extension to '" + properties.get("extension.point") +"'";
+                if(notifierService != null) notifierService.addNotification(error);
+                else notifications.add(error);
+            }
         }
     }
 
@@ -362,6 +386,10 @@ public class ExtensionHandler extends DependencyHandler {
         for (LinkDependencyCallback dependencyCallback : dependencyCallbacks) {
             dependencyCallback.setNotifierService(notifierService);
         }
+        for (String notification : notifications) {
+            notifierService.addNotification(notification);
+        }
+        notifications.clear();
     }
 
     @Unbind

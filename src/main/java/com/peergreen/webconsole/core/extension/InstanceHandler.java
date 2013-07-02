@@ -6,4 +6,5 @@ package com.peergreen.webconsole.core.extension;
 public interface InstanceHandler {
     String getInstanceName();
     void stop();
+    InstanceState getState();
 }

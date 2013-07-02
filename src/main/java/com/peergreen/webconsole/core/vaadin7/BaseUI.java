@@ -3,6 +3,8 @@ package com.peergreen.webconsole.core.vaadin7;
 import com.peergreen.security.UsernamePasswordAuthenticateService;
 import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
+import com.peergreen.webconsole.core.extension.InstanceHandler;
+import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.core.notifier.INotifierService;
 import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;
@@ -15,17 +17,22 @@ import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Property;
+import com.vaadin.event.LayoutEvents;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
+import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.DragAndDropWrapper;
@@ -41,13 +48,19 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.UIDetachedException;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.util.CurrentInstance;
+import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.MissingHandlerException;
+import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 
 import javax.security.auth.Subject;
+import javax.servlet.http.Cookie;
+import java.io.Serializable;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,7 +76,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @PreserveOnRefresh
 @org.apache.felix.ipojo.annotations.Component
 @Push
-public class BaseUI extends UI {
+public class BaseUI extends UI implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private static final String PEERGREEN_USER_COOKIE_NAME = "peergreen-user";
 
     /**
      * Root layout
@@ -89,6 +106,8 @@ public class BaseUI extends UI {
      * Content layout
      */
     CssLayout content;
+
+    Window notifications;
 
     /**
      * Main content layout
@@ -171,7 +190,25 @@ public class BaseUI extends UI {
             ScopeFactory scopeFactory = new ScopeFactory(roles);
             if (progressIndicator.getValue() >= 1) {
                 if (isAllowedToShowScope(roles)) {
-                    scopeFactory.setInstance(extensionFactory.create(new BaseUIContext(this, securityManager, uiId)));
+                    boolean failed = false;
+                    try {
+                        InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, securityManager, uiId));
+                        if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
+                        scopeFactory.setInstance(instance);
+                    } catch (MissingHandlerException e) {
+                        e.printStackTrace();
+                        failed = true;
+                    } catch (UnacceptableConfiguration unacceptableConfiguration) {
+                        unacceptableConfiguration.printStackTrace();
+                        failed = true;
+                    } catch (ConfigurationException e) {
+                        e.printStackTrace();
+                        failed = true;
+                    }
+                    if (failed) {
+                        String error = "Fail to add a scope for main UI";
+                        if(notifierService != null) notifierService.addNotification(error);
+                    }
                 }
             }
             scopesFactories.put(extensionFactory, scopeFactory);
@@ -236,6 +273,11 @@ public class BaseUI extends UI {
             securityManager = (ISecurityManager) getSession().getAttribute("security.manager");
             buildMainView();
         } else {
+//            Cookie userCookie = getCookieByName(PEERGREEN_USER_COOKIE_NAME);
+//            if (userCookie != null) {
+//                String token = userCookie.getValue();
+//                // get user by token and show main view
+//            }
             buildLoginView(false);
         }
     }
@@ -306,43 +348,82 @@ public class BaseUI extends UI {
             }
         };
 
+        signin.addShortcutListener(enter);
+        loginPanel.addComponent(fields);
+
+        HorizontalLayout bottomRow = new HorizontalLayout();
+        bottomRow.setWidth("100%");
+        bottomRow.setMargin(new MarginInfo(false, true, false, true));
+        final CheckBox keepLoggedIn = new CheckBox("Keep me logged in");
+        bottomRow.addComponent(keepLoggedIn);
+        bottomRow.setComponentAlignment(keepLoggedIn, Alignment.MIDDLE_LEFT);
+        // Add new error message
+        final Label error = new Label(
+                "Wrong username or password.",
+                ContentMode.HTML);
+        error.setId("webconsole_login_error");
+        error.addStyleName("error");
+        error.setSizeUndefined();
+        error.addStyleName("light");
+        // Add animation
+        error.addStyleName("v-animate-reveal");
+        error.setVisible(false);
+        bottomRow.addComponent(error);
+        bottomRow.setComponentAlignment(error, Alignment.MIDDLE_RIGHT);
+        loginPanel.addComponent(bottomRow);
+
         signin.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
-                Subject subject = authenticateService.authenticate(username.getValue(), password.getValue());
-                if (subject != null) {
-                    securityManager = new SecurityManager(subject);
-                    getSession().setAttribute("is.logged", true);
-                    getSession().setAttribute("security.manager", securityManager);
+                if (authenticate(username.getValue(), password.getValue())) {
+//                    if (keepLoggedIn.getValue()) {
+//                        //Cookie userCookie = getCookieByName(PEERGREEN_USER_COOKIE_NAME);
+//                       if (getCookieByName(PEERGREEN_USER_COOKIE_NAME) == null) {
+//                            // Get a token for this user and create a cooki
+//                            Page.getCurrent().getJavaScript().execute( String.format("document.cookie = '%s=%s; path=%s'",
+//                                    PEERGREEN_USER_COOKIE_NAME, token, VaadinService.getCurrentRequest().getContextPath()));
+//                        } else {
+//                            // update token
+//                            userCookie.setValue(token);
+//                            userCookie.setPath(VaadinService.getCurrentRequest().getContextPath());
+//                        }
+//                    }
+
                     buildMainView();
                 }
                 else {
-                    if (loginPanel.getComponentCount() > 2) {
-                        // Remove the previous error message
-                        loginPanel.removeComponent(loginPanel.getComponent(2));
-                    }
-                    // Add new error message
-                    Label error = new Label(
-                            "Wrong username or password.",
-                            ContentMode.HTML);
-                    error.setId("webconsole_login_error");
-                    error.addStyleName("error");
-                    error.setSizeUndefined();
-                    error.addStyleName("light");
-                    // Add animation
-                    error.addStyleName("v-animate-reveal");
-                    loginPanel.addComponent(error);
-                    username.focus();
+                     error.setVisible(true);
                 }
             }
         });
 
-        signin.addShortcutListener(enter);
-
-        loginPanel.addComponent(fields);
-
         loginLayout.addComponent(loginPanel);
         loginLayout.setComponentAlignment(loginPanel, Alignment.MIDDLE_CENTER);
+    }
+
+    private Cookie getCookieByName(String name) {
+        // Fetch all cookies from the request
+        Cookie[] cookies = VaadinService.getCurrentRequest().getCookies();
+
+        // Iterate to find cookie by its name
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean authenticate(String username, String password) {
+        Subject subject = authenticateService.authenticate(username, password);
+        if (subject != null) {
+            securityManager = new SecurityManager(subject);
+            getSession().setAttribute("is.logged", true);
+            getSession().setAttribute("security.manager", securityManager);
+            return true;
+        }
+        return false;
     }
 
     /**

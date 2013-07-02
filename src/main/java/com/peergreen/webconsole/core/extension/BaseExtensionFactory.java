@@ -32,22 +32,11 @@ public class BaseExtensionFactory implements ExtensionFactory {
     }
 
     @Override
-    public InstanceHandler create(UIContext context) {
-        InstanceHandler instance = null;
-
+    public InstanceHandler create(UIContext context) throws MissingHandlerException, UnacceptableConfiguration, ConfigurationException {
         Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(Constants.EXTENSION_POINT, extensionPoint);
         properties.put(Constants.UI_CONTEXT, context);
-        try {
-            instance = new BaseInstanceHandler(factory.createComponentInstance(properties));
-        } catch (UnacceptableConfiguration e) {
-            e.printStackTrace();
-        } catch (MissingHandlerException e) {
-            e.printStackTrace();
-        } catch (ConfigurationException e) {
-            e.printStackTrace();
-        }
-        return instance;
+        return new BaseInstanceHandler(factory.createComponentInstance(properties));
     }
 
     public class BaseInstanceHandler implements InstanceHandler {
@@ -67,6 +56,22 @@ public class BaseExtensionFactory implements ExtensionFactory {
         public void stop() {
             iPOJOComponentInstance.stop();
             iPOJOComponentInstance.dispose();
+        }
+
+        @Override
+        public InstanceState getState() {
+            switch (iPOJOComponentInstance.getState()) {
+                case ComponentInstance.DISPOSED:
+                    return InstanceState.DISPOSED;
+                case ComponentInstance.STOPPED:
+                    return InstanceState.STOPPED;
+                case ComponentInstance.INVALID:
+                    return InstanceState.INVALID;
+                case ComponentInstance.VALID:
+                    return InstanceState.VALID;
+                default:
+                    return null;
+            }
         }
     }
 }
