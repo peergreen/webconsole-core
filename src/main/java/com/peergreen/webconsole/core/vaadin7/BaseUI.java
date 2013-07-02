@@ -23,7 +23,6 @@ import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
@@ -61,11 +60,17 @@ import org.apache.felix.ipojo.annotations.Unbind;
 import javax.security.auth.Subject;
 import javax.servlet.http.Cookie;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -812,12 +817,7 @@ public class BaseUI extends UI implements Serializable {
                 }
             });
 
-            access(new Runnable() {
-                @Override
-                public void run() {
-                    menu.addComponent(b);
-                }
-            });
+            sortButtonsInMenu(scopeName, b);
 
             notifierService.addScopeButton(scopeView, b, this, notify);
             notifierService.addNotification("New scope '" + scopeName + "' added.");
@@ -847,6 +847,37 @@ public class BaseUI extends UI implements Serializable {
             scopes.get(scopeName).setScopeMenuButton(null);
             notifierService.removeScopeButton((Component) scopes.get(scopeName).getScopeView());
         }
+    }
+
+    private void sortButtonsInMenu(final String scopeName, Button b) {
+        final LinkedList<String> scopesNames = new LinkedList<>();
+        for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
+            scopesNames.add(scopeEntry.getKey());
+        }
+        Collections.sort(scopesNames);
+        if (scopesNames.contains("home")) {
+            scopesNames.remove("home");
+            scopesNames.addFirst("home");
+        }
+
+        final List<Button> buttonsToShift = new LinkedList<>();
+        buttonsToShift.add(b);
+        access(new Runnable() {
+            @Override
+            public void run() {
+                for (String scope : scopesNames) {
+                    if ("home".equals(scope)) continue;
+                    if ("home".equals(scopeName) || scopeName.compareTo(scope) < 0) {
+                        buttonsToShift.add(scopes.get(scope).getScopeMenuButton());
+                        menu.removeComponent(scopes.get(scope).getScopeMenuButton());
+                    }
+                }
+
+                for (Button button : buttonsToShift) {
+                    menu.addComponent(button);
+                }
+            }
+        });
     }
 
     private boolean isAllowedToShowScope(String[] rolesAllowed) {
