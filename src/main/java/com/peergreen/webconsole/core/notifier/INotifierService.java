@@ -4,6 +4,8 @@ import com.peergreen.webconsole.NotificationOverlay;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 /**
  * Notifier service
@@ -33,6 +35,13 @@ public interface INotifierService {
      * @param scope
      */
     void removeScopeButton(Component scope);
+
+    /**
+     * Add notifications buttons
+     * @param button
+     * @param window
+     */
+    void addNotificationsButton(Button button, Window window, UI ui);
 
     /**
      * Hide scope button from menu

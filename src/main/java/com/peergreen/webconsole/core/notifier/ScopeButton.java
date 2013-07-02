@@ -1,29 +1,28 @@
 package com.peergreen.webconsole.core.notifier;
 
 import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 
 /**
  * @author Mohammed Boukada
  */
 public class ScopeButton {
-    Button scopeButton;
+    Button button;
     UI buttonUi;
     int badge;
 
-    public ScopeButton(Button scopeButton, UI buttonUi, int badge) {
-        this.scopeButton = scopeButton;
+    public ScopeButton(Button button, UI buttonUi, int badge) {
+        this.button = button;
         this.buttonUi = buttonUi;
         this.badge = badge;
     }
 
-    public Button getScopeButton() {
-        return scopeButton;
+    public Button getButton() {
+        return button;
     }
 
-    public void setScopeButton(Button scopeButton) {
-        this.scopeButton = scopeButton;
+    public void setButton(Button button) {
+        this.button = button;
     }
 
     public UI getButtonUi() {

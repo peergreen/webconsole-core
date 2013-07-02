@@ -4861,6 +4861,22 @@ body .dashboard.v-app-loading {
 	padding: 1em 1em 2em;
 }
 
+.dashboard .frame-panel {
+	background: #fff;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	-webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	-moz-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+	padding-top : 0.5em;
+	/*padding: 1em 1em 2em;*/
+}
+
+.dashboard .frame-panel .layout {
+    padding : 0;
+}
+
 .dashboard .login-panel .labels, .dashboard .login-panel .fields {
 	display: block;
 }
@@ -4870,6 +4886,13 @@ body .dashboard.v-app-loading {
 }
 
 .dashboard .login-panel .h2 {
+	padding: 0;
+	font-size: 20px;
+	color: #c4cacf;
+	letter-spacing: -0.05em;
+}
+
+.dashboard .frame-panel .h2 {
 	padding: 0;
 	font-size: 20px;
 	color: #c4cacf;
@@ -5197,6 +5220,10 @@ body .dashboard.v-app-loading {
 	background: #fff;
 }
 
+.dashboard .row {
+    padding-bottom: 5px;
+}
+
 .dashboard .help-overlay {
 	-webkit-border-radius: 2px;
 	-moz-border-radius: 2px;
@@ -5280,7 +5307,8 @@ body .dashboard.v-app-loading {
 }
 
 .dashboard .dashboard-view .v-csslayout {
-	padding: 50px 20px 0;
+	/*padding: 50px 20px 0;*/
+	padding: 5px 5px 0;
 	overflow: auto;
 	position: relative;
 }
@@ -5338,18 +5366,19 @@ body .dashboard.v-app-loading {
 	text-shadow: 0 1px 1px #000;
 }
 
-.dashboard .dashboard-view .toolbar {
-	padding: 20px;
+.dashboard .toolbar {
+    color: #d0d1d3;
+	padding: 0 20px 0 20px;
 	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
-	background: transparent;
+	background: #414243 url(img/sidebar-gradient.png) repeat-y top right;
 }
 
-.dashboard .dashboard-view .toolbar .v-button {
+.dashboard .toolbar .v-button {
 	position: relative;
 	font-size: 16px;
 }
 
-.dashboard .dashboard-view .toolbar .notifications.unread .v-button-caption {
+.dashboard .toolbar .notifications.unread .v-button-caption {
 	display: block;
 	position: absolute;
 	top: 2px;
@@ -5357,6 +5386,7 @@ body .dashboard.v-app-loading {
 }
 
 .dashboard .dashboard-view .h1 {
+    padding-top: 10px;
 	padding-right: 1em;
 }
 
@@ -5371,7 +5401,7 @@ body .dashboard.v-app-loading {
 
 .dashboard .notifications.v-window {
 	margin-top: 45px !important;
-	margin-left: -193px !important;
+	margin-left: -250px !important;
 	font-size: 13px;
 }
 
@@ -5383,7 +5413,7 @@ body .dashboard.v-app-loading {
 	content: "";
 	position: absolute;
 	top: -14px;
-	right: 80px;
+	right: 20px;
 	border: 7px solid #fff;
 	width: 0;
 	height: 0;

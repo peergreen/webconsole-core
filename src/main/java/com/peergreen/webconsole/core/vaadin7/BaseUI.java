@@ -437,6 +437,7 @@ public class BaseUI extends UI implements Serializable {
         //buildRoutes();
 
         notifierService.closeAll();
+        final Button notify = new Button("2");
 
         // Build menu layout
         main = new HorizontalLayout() {
@@ -526,14 +527,67 @@ public class BaseUI extends UI implements Serializable {
                     }
                 });
 
-                // Content
-                addComponent(content);
-                content.setSizeFull();
-                content.addStyleName("view-content");
-                setExpandRatio(content, 1);
+                VerticalLayout contentRoot = new VerticalLayout() {
+                    {
+                        setSizeFull();
+                        HorizontalLayout toolbar = new HorizontalLayout() {
+                            {
+                                setWidth("100%");
+                                setSpacing(true);
+                                addStyleName("toolbar");
+                                Label title = new Label("Toolbar");
+                                addComponent(title);
+                                setComponentAlignment(title, Alignment.MIDDLE_LEFT);
+                                setExpandRatio(title, 1);
+
+                                notify.setDescription("Notifications (2 unread)");
+                                // notify.addStyleName("borderless");
+                                notify.addStyleName("notifications");
+                                notify.addStyleName("icon-only");
+                                notify.addStyleName("icon-bell");
+
+                                notify.addClickListener(new Button.ClickListener() {
+                                    @Override
+                                    public void buttonClick(Button.ClickEvent event) {
+                                        event.getButton().removeStyleName("unread");
+                                        if (notifications != null && notifications.getUI() != null)
+                                            notifications.close();
+                                        else {
+                                            setNotificationsWindowPosition(event);
+                                            getUI().addWindow(notifications);
+                                            notifications.focus();
+                                            ((CssLayout) getUI().getContent())
+                                                    .addLayoutClickListener(new LayoutEvents.LayoutClickListener() {
+                                                        @Override
+                                                        public void layoutClick(LayoutEvents.LayoutClickEvent event) {
+                                                            notifications.close();
+                                                            ((CssLayout) getUI().getContent())
+                                                                    .removeLayoutClickListener(this);
+                                                        }
+                                                    });
+                                        }
+                                    }
+                                });
+                                addComponent(notify);
+                                setComponentAlignment(notify, Alignment.MIDDLE_LEFT);
+                            }
+                        };
+
+                        addComponent(toolbar);
+                        addComponent(content);
+                        content.setSizeFull();
+                        content.addStyleName("view-content");
+                        setExpandRatio(content, 1.5f);
+
+                    }
+                };
+                addComponent(contentRoot);
+                setExpandRatio(contentRoot, 1);
             }
 
         };
+        buildNotifications();
+        notifierService.addNotificationsButton(notify, notifications, this);
         nav = new Navigator(this, content);
         nav.addView("", new NavigatorView(new CssLayout()));
         nav.addView("/", new NavigatorView(new CssLayout()));
@@ -554,7 +608,25 @@ public class BaseUI extends UI implements Serializable {
             if (isAllowedToShowScope(scopeFactoryEntry.getValue().getRoles())) {
                 ExtensionFactory extensionFactory = scopeFactoryEntry.getKey();
                 ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
-                scopeFactory.setInstance(extensionFactory.create(new BaseUIContext(this, securityManager, uiId)));
+                boolean failed = false;
+                try {
+                    InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, securityManager, uiId));
+                    if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
+                    scopeFactory.setInstance(instance);
+                } catch (MissingHandlerException e) {
+                    e.printStackTrace();
+                    failed = true;
+                } catch (UnacceptableConfiguration unacceptableConfiguration) {
+                    unacceptableConfiguration.printStackTrace();
+                    failed = true;
+                } catch (ConfigurationException e) {
+                    e.printStackTrace();
+                    failed = true;
+                }
+                if (failed) {
+                    String error = "Fail to add a scope for main UI";
+                    if(notifierService != null) notifierService.addNotification(error);
+                }
             }
         }
 
@@ -697,7 +769,7 @@ public class BaseUI extends UI implements Serializable {
             nav.addView("/" + scopeName, view);
 
             // TODO change 'test' by 'home' when home scope one is available
-            if ("test".equals(scopeName.toLowerCase())) {
+            if ("home".equals(scopeName.toLowerCase())) {
                 nav.addView("", view);
                 nav.addView("/", view);
             }
@@ -712,7 +784,7 @@ public class BaseUI extends UI implements Serializable {
         if (nav != null) {
             nav.removeView("/" + scopeName);
             // TODO change 'test' by 'home' when home scope one is available
-            if ("test".equals(scopeName)) {
+            if ("home".equals(scopeName)) {
                 nav.removeView("");
                 nav.removeView("/");
             }
@@ -748,6 +820,7 @@ public class BaseUI extends UI implements Serializable {
             });
 
             notifierService.addScopeButton(scopeView, b, this, notify);
+            notifierService.addNotification("New scope '" + scopeName + "' added.");
 
             scopes.get(scopeName).setScopeMenuButton(b);
 
@@ -828,5 +901,20 @@ public class BaseUI extends UI implements Serializable {
                 }
             } catch (InterruptedException e) {}
         }
+    }
+
+    private void buildNotifications() {
+        notifications = new Window("Notifications");
+        notifications.setWidth("300px");
+        notifications.addStyleName("notifications");
+        notifications.setClosable(false);
+        notifications.setResizable(false);
+        notifications.setDraggable(false);
+        notifications.setCloseShortcut(ShortcutAction.KeyCode.ESCAPE, null);
+    }
+
+    private void setNotificationsWindowPosition(Button.ClickEvent event) {
+        notifications.setPositionX(event.getClientX() - event.getRelativeX());
+        notifications.setPositionY(event.getClientY() - event.getRelativeY());
     }
 }

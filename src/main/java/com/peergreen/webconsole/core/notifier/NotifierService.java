@@ -14,15 +14,21 @@ import com.peergreen.webconsole.NotificationOverlay;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Notifier service
@@ -31,7 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Provides
 @Instantiate
-public class NotifierService implements INotifierService {
+public class NotifierService implements INotifierService, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * List of overlays
@@ -41,7 +49,12 @@ public class NotifierService implements INotifierService {
     /**
      * Scope buttons in each view
      */
-    private ConcurrentHashMap<com.vaadin.ui.Component, ScopeButton> scopesButtons = new ConcurrentHashMap<>();
+    private Map<com.vaadin.ui.Component, ScopeButton> scopesButtons = new ConcurrentHashMap<>();
+    private List<NotificationButton> notificationButtons = new CopyOnWriteArrayList<>();
+
+    // TODO handle concurrent access
+    private Map<String, Long> notifications = new LinkedHashMap<>();
+
     /**
      * Close all overlays
      */
@@ -56,7 +69,7 @@ public class NotifierService implements INotifierService {
      */
     @Override
     public void addNotification(String notification) {
-        Notification.show(notification);
+        notifications.put(notification, System.currentTimeMillis());
     }
 
     /** {@inheritDoc}
@@ -87,11 +100,41 @@ public class NotifierService implements INotifierService {
         }
     }
 
+    @Override
+    public void addNotificationsButton(Button button, final Window window, UI ui) {
+        final VerticalLayout l = new VerticalLayout();
+        l.setMargin(true);
+        l.setSpacing(true);
+        window.setContent(l);
+
+        notificationButtons.add(new NotificationButton(button, window, l, 0));
+
+//        for (int j=0; j<15; j++) {
+//            notifications.put("Notification " + j, System.currentTimeMillis());
+//        }
+
+        button.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                l.removeAllComponents();
+                int i = 1;
+                for (Map.Entry<String, Long> notification : notifications.entrySet()) {
+                    Label notif = new Label("<hr><b>" + notification.getKey() + "</b><br><span>" +
+                            TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - notification.getValue()) +
+                            " minutes ago</span><br>", ContentMode.HTML);
+                    l.addComponentAsFirst(notif);
+                    i++;
+                    if (i > 5) break;
+                }
+            }
+        });
+    }
+
     /** {@inheritDoc}
      */
     public void hideScopeButton(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
-            scopesButtons.get(scope).getScopeButton().setVisible(false);
+            scopesButtons.get(scope).getButton().setVisible(false);
         }
     }
 
@@ -100,10 +143,10 @@ public class NotifierService implements INotifierService {
      */
     public void removeBadge(com.vaadin.ui.Component scope) {
         updateBadge(scope, 0);
-        scopesButtons.get(scope).getScopeButton().setHtmlContentAllowed(true);
-        setCaption(scopesButtons.get(scope).getScopeButton(),
+        scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
+        setCaption(scopesButtons.get(scope).getButton(),
                    scopesButtons.get(scope).getButtonUi(),
-                   getInitialCaption(scopesButtons.get(scope).getScopeButton()));
+                   getInitialCaption(scopesButtons.get(scope).getButton()));
     }
 
     /** {@inheritDoc}
@@ -111,11 +154,11 @@ public class NotifierService implements INotifierService {
     public void incrementBadge(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
             updateBadge(scope, +1);
-            scopesButtons.get(scope).getScopeButton().setVisible(true);
-            scopesButtons.get(scope).getScopeButton().setHtmlContentAllowed(true);
-            String newCaption = getInitialCaption(scopesButtons.get(scope).getScopeButton()) +
+            scopesButtons.get(scope).getButton().setVisible(true);
+            scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
+            String newCaption = getInitialCaption(scopesButtons.get(scope).getButton()) +
                     "<span class=\"badge\">" + scopesButtons.get(scope).getBadge() +"</span>";
-            setCaption(scopesButtons.get(scope).getScopeButton(),
+            setCaption(scopesButtons.get(scope).getButton(),
                        scopesButtons.get(scope).getButtonUi(),
                        newCaption);
         }
@@ -126,11 +169,11 @@ public class NotifierService implements INotifierService {
     public void decrementBadge(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
             updateBadge(scope, -1);
-            scopesButtons.get(scope).getScopeButton().setHtmlContentAllowed(true);
-            String newCaption = getInitialCaption(scopesButtons.get(scope).getScopeButton()) +
+            scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
+            String newCaption = getInitialCaption(scopesButtons.get(scope).getButton()) +
                     ((scopesButtons.get(scope).getBadge() == 0) ? "" : "<span class=\"badge\">" +
                             scopesButtons.get(scope).getBadge() +"</span>");
-            setCaption(scopesButtons.get(scope).getScopeButton(),
+            setCaption(scopesButtons.get(scope).getButton(),
                        scopesButtons.get(scope).getButtonUi(),
                        newCaption);
         }
