@@ -2,7 +2,7 @@ package com.peergreen.webconsole.core.handler;
 
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.Unlink;
-import com.peergreen.webconsole.core.notifier.INotifierService;
+import com.peergreen.webconsole.INotifierService;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 import org.apache.felix.ipojo.InstanceManager;

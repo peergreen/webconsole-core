@@ -10,6 +10,7 @@
 
 package com.peergreen.webconsole.core.notifier;
 
+import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.NotificationOverlay;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Button;

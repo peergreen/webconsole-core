@@ -5,7 +5,7 @@ import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
 import com.peergreen.webconsole.core.extension.InstanceState;
-import com.peergreen.webconsole.core.notifier.INotifierService;
+import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;
 import com.peergreen.webconsole.ISecurityManager;
