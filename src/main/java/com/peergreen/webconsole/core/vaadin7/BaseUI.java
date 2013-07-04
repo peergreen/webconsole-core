@@ -218,7 +218,7 @@ public class BaseUI extends UI implements Serializable {
                         failed = true;
                     }
                     if (failed) {
-                        String error = "Fail to add a scope for main UI";
+                        String error = "Fail to add a scope for main UI. Please see logs";
                         if(notifierService != null) notifierService.addNotification(error);
                     }
                 }
@@ -652,8 +652,8 @@ public class BaseUI extends UI implements Serializable {
                     failed = true;
                 }
                 if (failed) {
-                    String error = "Fail to add a scope for main UI";
-                    if(notifierService != null) notifierService.addNotification(error);
+                    String error = "Fail to add a scope for main UI. Please see logs";
+                    if (notifierService != null) notifierService.addNotification(error);
                 }
             }
         }
@@ -717,9 +717,9 @@ public class BaseUI extends UI implements Serializable {
         if (stopValue.equals(progressIndicator.getValue())) {
             showMainContent();
         } else {
-//            TimeOutThread timeOutThread = new TimeOutThread();
-//            timeOutThread.start();
-            progressIndicator.setPollingInterval(500);
+            TimeOutThread timeOutThread = new TimeOutThread();
+            timeOutThread.start();
+            progressIndicator.setPollingInterval(200);
             progressIndicator.addValueChangeListener(new Property.ValueChangeListener() {
                 @Override
                 public void valueChange(Property.ValueChangeEvent event) {
@@ -944,7 +944,7 @@ public class BaseUI extends UI implements Serializable {
         @Override
         public void run() {
             try {
-                sleep(3000);
+                sleep(2000);
                 if (progressIndicator.getValue() < 1) {
                     access(new Runnable() {
                         @Override
