@@ -17,7 +17,7 @@ public class SecurityManager implements ISecurityManager {
 
     private String principalName;
 
-    private List<String> principalRoles;
+    private List<String> principalRoles = new ArrayList<>();
 
     private boolean userLogged = false;
 
@@ -29,7 +29,6 @@ public class SecurityManager implements ISecurityManager {
                 principalName = ((Principal) object).getName();
             } else {
                 Enumeration e = ((Group) object).members();
-                principalRoles = new ArrayList<>();
                 while (e.hasMoreElements()) {
                     principalRoles.add(((Principal) e.nextElement()).getName());
                 }
