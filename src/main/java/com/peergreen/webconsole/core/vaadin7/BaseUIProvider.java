@@ -27,11 +27,12 @@ import java.util.List;
  */
 @Component
 @Provides(specifications = UIProvider.class)
-public class UIProviderBase extends UIProvider {
+public class BaseUIProvider extends UIProvider {
 
     private String consoleName;
     private String consoleAlias;
     private Boolean enableSecurity;
+    private String[] defaultRoles;
 
     List<ComponentInstance> uis = new ArrayList<>();
 
@@ -52,7 +53,7 @@ public class UIProviderBase extends UIProvider {
      * Vaadin base UI provider constructor
      * @param bundleContext
      */
-    public UIProviderBase(BundleContext bundleContext) {
+    public BaseUIProvider(BundleContext bundleContext) {
         this.bundleContext = bundleContext;
     }
 
@@ -72,7 +73,9 @@ public class UIProviderBase extends UIProvider {
         this.enableSecurity = enableSecurity;
     }
 
-
+    public void setDefaultRoles(String[] defaultRoles) {
+        this.defaultRoles = defaultRoles;
+    }
 
     /** {@inheritDoc}
      */
@@ -90,7 +93,7 @@ public class UIProviderBase extends UIProvider {
             // Create an instance of baseUI
             String scopeExtensionPoint = "com.peergreen.webconsole.scope";
             String uiId = consoleAlias + "-" + i;
-            ui = new BaseUI(consoleName, scopeExtensionPoint, uiId, enableSecurity);
+            ui = new BaseUI(consoleName, scopeExtensionPoint, uiId, enableSecurity, defaultRoles);
 
             // Configuration properties for ipojo component
             Dictionary<String, Object> props = new Hashtable<>();
