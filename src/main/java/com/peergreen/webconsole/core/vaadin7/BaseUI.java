@@ -1,6 +1,9 @@
 package com.peergreen.webconsole.core.vaadin7;
 
 import com.peergreen.security.UsernamePasswordAuthenticateService;
+import com.peergreen.security.principal.RoleGroup;
+import com.peergreen.security.principal.RolePrincipal;
+import com.peergreen.security.principal.UserPrincipal;
 import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
@@ -87,6 +90,8 @@ public class BaseUI extends UI implements Serializable {
 
     private static final String PEERGREEN_USER_COOKIE_NAME = "peergreen-user";
 
+    private static final String ANONYMOUS_USER = "Anonymous";
+
     /**
      * Root layout
      */
@@ -138,10 +143,11 @@ public class BaseUI extends UI implements Serializable {
     private Map<String, Scope> scopes = new ConcurrentHashMap<>();
 
     /**
-     * BaseConsole name
+     * SecuredConsole name
       */
     private String consoleName;
     private Boolean enableSecurity;
+    private String[] defaultRoles;
 
     private String scopeExtensionPoint;
 
@@ -170,11 +176,12 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Base console UI constructor
      */
-    public BaseUI(String consoleName, String extensionPoint, String uiId, Boolean enableSecurity) {
+    public BaseUI(String consoleName, String extensionPoint, String uiId, Boolean enableSecurity, String[] defaultRoles) {
         this.consoleName = consoleName;
         this.scopeExtensionPoint = extensionPoint;
         this.uiId = uiId;
         this.enableSecurity = enableSecurity;
+        this.defaultRoles = defaultRoles;
     }
 
     @Invalidate
@@ -276,6 +283,20 @@ public class BaseUI extends UI implements Serializable {
         Boolean isLogged = (Boolean) getSession().getAttribute("is.logged");
         if(!enableSecurity || (isLogged != null && isLogged)) {
             securityManager = (ISecurityManager) getSession().getAttribute("security.manager");
+            if (securityManager == null) {
+                Subject defaultSubject = new Subject();
+                defaultSubject.getPrincipals().add(new UserPrincipal(ANONYMOUS_USER));
+                RoleGroup group = new RoleGroup();
+                if (defaultRoles != null) {
+                    for (String role : defaultRoles) {
+                        group.addMember(new RolePrincipal(role));
+                    }
+                }
+                defaultSubject.getPrincipals().add(group);
+                defaultSubject.setReadOnly();
+                securityManager = new SecurityManager(defaultSubject);
+                getSession().setAttribute("security.manager", securityManager);
+            }
             buildMainView();
         } else {
 //            Cookie userCookie = getCookieByName(PEERGREEN_USER_COOKIE_NAME);
@@ -487,45 +508,47 @@ public class BaseUI extends UI implements Serializable {
                                     userName.setSizeUndefined();
                                     addComponent(userName);
 
-                                    MenuBar.Command cmd = new MenuBar.Command() {
-                                        @Override
-                                        public void menuSelected(
-                                                MenuBar.MenuItem selectedItem) {
-                                            Notification
-                                                    .show("Not implemented yet");
-                                        }
-                                    };
-                                    MenuBar settings = new MenuBar();
-                                    MenuBar.MenuItem settingsMenu = settings.addItem("",
-                                            null);
-                                    settingsMenu.setStyleName("icon-cog");
-                                    settingsMenu.addItem("Settings", cmd);
-                                    settingsMenu.addItem("Preferences", cmd);
-                                    settingsMenu.addSeparator();
-                                    settingsMenu.addItem("My Account", cmd);
-                                    addComponent(settings);
-
-                                    Button exit = new NativeButton("Exit");
-                                    exit.addStyleName("icon-cancel");
-                                    exit.setDescription("Sign Out");
-                                    addComponent(exit);
-                                    exit.addClickListener(new Button.ClickListener() {
-                                        @Override
-                                        public void buttonClick(Button.ClickEvent event) {
-                                            ((SecurityManager) securityManager).setUserLogged(false);
-                                            for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
-                                                ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
-                                                if (scopeFactory.getInstance() != null) {
-                                                    scopeFactory.getInstance().stop();
-                                                    scopeFactory.setInstance(null);
-                                                }
+                                    if (!ANONYMOUS_USER.equals(securityManager.getUserName())) {
+                                        MenuBar.Command cmd = new MenuBar.Command() {
+                                            @Override
+                                            public void menuSelected(
+                                                    MenuBar.MenuItem selectedItem) {
+                                                Notification
+                                                        .show("Not implemented yet");
                                             }
-                                            nbScopesToBound = 0;
-                                            progressIndicator.setValue(Float.valueOf(0));
-                                            getSession().setAttribute("is.logged", false);
-                                            buildLoginView(true);
-                                        }
-                                    });
+                                        };
+                                        MenuBar settings = new MenuBar();
+                                        MenuBar.MenuItem settingsMenu = settings.addItem("",
+                                                null);
+                                        settingsMenu.setStyleName("icon-cog");
+                                        settingsMenu.addItem("Settings", cmd);
+                                        settingsMenu.addItem("Preferences", cmd);
+                                        settingsMenu.addSeparator();
+                                        settingsMenu.addItem("My Account", cmd);
+                                        addComponent(settings);
+
+                                        Button exit = new NativeButton("Exit");
+                                        exit.addStyleName("icon-cancel");
+                                        exit.setDescription("Sign Out");
+                                        addComponent(exit);
+                                        exit.addClickListener(new Button.ClickListener() {
+                                            @Override
+                                            public void buttonClick(Button.ClickEvent event) {
+                                                ((SecurityManager) securityManager).setUserLogged(false);
+                                                for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
+                                                    ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
+                                                    if (scopeFactory.getInstance() != null) {
+                                                        scopeFactory.getInstance().stop();
+                                                        scopeFactory.setInstance(null);
+                                                    }
+                                                }
+                                                nbScopesToBound = 0;
+                                                progressIndicator.setValue(Float.valueOf(0));
+                                                getSession().setAttribute("is.logged", false);
+                                                buildLoginView(true);
+                                            }
+                                        });
+                                    }
                                 }
                             });
                         }
