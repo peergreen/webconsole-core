@@ -796,7 +796,6 @@ public class BaseUI extends UI implements Serializable {
             }
             nav.addView("/" + scopeName, view);
 
-            // TODO change 'test' by 'home' when home scope one is available
             if ("home".equals(scopeName.toLowerCase())) {
                 nav.addView("", view);
                 nav.addView("/", view);
@@ -811,7 +810,6 @@ public class BaseUI extends UI implements Serializable {
     private void removeRouteFromNav(String scopeName) {
         if (nav != null) {
             nav.removeView("/" + scopeName);
-            // TODO change 'test' by 'home' when home scope one is available
             if ("home".equals(scopeName)) {
                 nav.removeView("");
                 nav.removeView("/");
