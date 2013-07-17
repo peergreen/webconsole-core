@@ -2,6 +2,7 @@ package com.peergreen.webconsole.core.osgi;
 
 import javax.servlet.annotation.WebServlet;
 
+import com.peergreen.webconsole.core.exception.VaadinErrorHandler;
 import com.vaadin.server.DeploymentConfiguration;
 import com.vaadin.server.ServiceException;
 import com.vaadin.server.SessionInitEvent;
@@ -45,6 +46,7 @@ public class VaadinOSGiServlet extends VaadinServlet {
             public void sessionInit(SessionInitEvent e) throws ServiceException {
                 // Add Vaadin UI provider to the Vaadin session
                 e.getSession().addUIProvider(provider);
+                e.getSession().setErrorHandler(new VaadinErrorHandler());
             }
          });
 
