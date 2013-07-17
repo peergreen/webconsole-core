@@ -5321,7 +5321,7 @@ body .dashboard.v-app-loading {
 	padding: 0 20px;
 	line-height: 38px;
 	border-bottom: 1px solid #eee;
-	position: absolute;
+	/*position: absolute;*/
 	top: 0;
 	left: 0;
 	right: 0;
