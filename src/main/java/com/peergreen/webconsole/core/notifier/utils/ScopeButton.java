@@ -1,4 +1,4 @@
-package com.peergreen.webconsole.core.notifier;
+package com.peergreen.webconsole.core.notifier.utils;
 
 import com.vaadin.ui.Button;
 import com.vaadin.ui.UI;

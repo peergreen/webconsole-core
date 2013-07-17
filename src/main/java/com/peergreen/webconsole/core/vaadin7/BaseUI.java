@@ -20,7 +20,6 @@ import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.data.Property;
-import com.vaadin.event.LayoutEvents;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
@@ -63,17 +62,14 @@ import org.apache.felix.ipojo.annotations.Unbind;
 import javax.security.auth.Subject;
 import javax.servlet.http.Cookie;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -463,7 +459,9 @@ public class BaseUI extends UI implements Serializable {
         //buildRoutes();
 
         notifierService.closeAll();
-        final Button notify = new Button("2");
+        final Button notify = new Button("");
+        final HorizontalLayout tasksBar = new HorizontalLayout();
+        tasksBar.setMargin(true);
 
         // Build menu layout
         main = new HorizontalLayout() {
@@ -563,12 +561,11 @@ public class BaseUI extends UI implements Serializable {
                                 setWidth("100%");
                                 setSpacing(true);
                                 addStyleName("toolbar");
-                                Label title = new Label("Toolbar");
-                                addComponent(title);
-                                setComponentAlignment(title, Alignment.MIDDLE_LEFT);
-                                setExpandRatio(title, 1);
+                                addComponent(tasksBar);
+                                setComponentAlignment(tasksBar, Alignment.MIDDLE_LEFT);
+                                setExpandRatio(tasksBar, 1);
 
-                                notify.setDescription("Notifications (2 unread)");
+                                notify.setDescription("Notifications");
                                 // notify.addStyleName("borderless");
                                 notify.addStyleName("notifications");
                                 notify.addStyleName("icon-only");
@@ -578,21 +575,13 @@ public class BaseUI extends UI implements Serializable {
                                     @Override
                                     public void buttonClick(Button.ClickEvent event) {
                                         event.getButton().removeStyleName("unread");
+                                        event.getButton().setDescription("Notifications");
                                         if (notifications != null && notifications.getUI() != null)
                                             notifications.close();
                                         else {
                                             setNotificationsWindowPosition(event);
                                             getUI().addWindow(notifications);
                                             notifications.focus();
-                                            ((CssLayout) getUI().getContent())
-                                                    .addLayoutClickListener(new LayoutEvents.LayoutClickListener() {
-                                                        @Override
-                                                        public void layoutClick(LayoutEvents.LayoutClickEvent event) {
-                                                            notifications.close();
-                                                            ((CssLayout) getUI().getContent())
-                                                                    .removeLayoutClickListener(this);
-                                                        }
-                                                    });
                                         }
                                     }
                                 });
@@ -616,6 +605,7 @@ public class BaseUI extends UI implements Serializable {
         };
         buildNotifications();
         notifierService.addNotificationsButton(notify, notifications, this);
+        notifierService.addTasksBar(tasksBar, this);
         nav = new Navigator(this, content);
         nav.addView("", new NavigatorView(new CssLayout()));
         nav.addView("/", new NavigatorView(new CssLayout()));
@@ -841,7 +831,6 @@ public class BaseUI extends UI implements Serializable {
             sortButtonsInMenu(scopeName, b);
 
             notifierService.addScopeButton(scopeView, b, this, notify);
-            notifierService.addNotification("New scope '" + scopeName + "' added.");
 
             scopes.get(scopeName).setScopeMenuButton(b);
 
@@ -958,6 +947,7 @@ public class BaseUI extends UI implements Serializable {
     private void buildNotifications() {
         notifications = new Window("Notifications");
         notifications.setWidth("300px");
+        notifications.setHeight("80%");
         notifications.addStyleName("notifications");
         notifications.setClosable(false);
         notifications.setResizable(false);

@@ -1,4 +1,4 @@
-package com.peergreen.webconsole.core.notifier;
+package com.peergreen.webconsole.core.notifier.utils;
 
 import com.vaadin.ui.Button;
 import com.vaadin.ui.VerticalLayout;
@@ -18,5 +18,21 @@ public class NotificationButton {
         this.window = window;
         this.windowContent = windowContent;
         this.badge = badge;
+    }
+
+    public Button getButton() {
+        return button;
+    }
+
+    public int getBadge() {
+        return badge;
+    }
+
+    public void setBadge(int badge) {
+        this.badge = badge;
+    }
+
+    public void incrementBadge() {
+        this.badge++;
     }
 }
