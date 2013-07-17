@@ -1,6 +1,8 @@
 package com.peergreen.webconsole.core.vaadin7;
 
 import com.peergreen.webconsole.Constants;
+import com.vaadin.server.SessionDestroyEvent;
+import com.vaadin.server.SessionDestroyListener;
 import com.vaadin.server.UIClassSelectionEvent;
 import com.vaadin.server.UICreateEvent;
 import com.vaadin.server.UIProvider;
@@ -94,7 +96,8 @@ public class BaseUIProvider extends UIProvider {
             String scopeExtensionPoint = "com.peergreen.webconsole.scope";
             String uiId = consoleAlias + "-" + i;
             ui = new BaseUI(consoleName, scopeExtensionPoint, uiId, enableSecurity, defaultRoles);
-
+            // register the ui to broadcaster
+            //DatabaseProvider.javaBroadcaster.register(ui);
             // Configuration properties for ipojo component
             Dictionary<String, Object> props = new Hashtable<>();
             props.put("instance.object", ui);
@@ -104,7 +107,15 @@ public class BaseUIProvider extends UIProvider {
             props.put(Constants.REQUIRES_FILTER, bindFilters);
 
             // Create ipojo component from its factory
-            uis.add(factory.createComponentInstance(props));
+            final ComponentInstance instance = factory.createComponentInstance(props);
+            e.getService().addSessionDestroyListener(new SessionDestroyListener() {
+                @Override
+                public void sessionDestroy(SessionDestroyEvent event) {
+                    instance.stop();
+                    instance.dispose();
+                }
+            });
+            uis.add(instance);
             i++;
         } catch (UnacceptableConfiguration unacceptableConfiguration) {
             unacceptableConfiguration.printStackTrace();

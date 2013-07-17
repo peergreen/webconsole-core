@@ -182,8 +182,14 @@ public class BaseUI extends UI implements Serializable {
 
     @Invalidate
     public void stop() {
-        // Unregister Vaadin connector
-        getConnectorTracker().unregisterConnector(getConnectorTracker().getConnector(getConnectorId()));
+        notifierService.clearComponentsForUI(this);
+        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
+            ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
+            if (scopeFactory.getInstance() != null) {
+                scopeFactory.getInstance().stop();
+                scopeFactory.setInstance(null);
+            }
+        }
     }
 
     /**
@@ -672,6 +678,9 @@ public class BaseUI extends UI implements Serializable {
             }
         });
         nav.navigateTo("/");
+        if (scopes.containsKey("home")) {
+            scopes.get("home").getScopeMenuButton().addStyleName("selected");
+        }
     }
 
     private void buildProgressIndicatorView() {
