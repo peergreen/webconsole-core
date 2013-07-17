@@ -262,7 +262,7 @@ public class NotifierService implements INotifierService, Serializable {
     /** {@inheritDoc}
      */
     public void incrementBadge(com.vaadin.ui.Component scope) {
-        if (scopesButtons.containsKey(scope)) {
+        if (scopesButtons.containsKey(scope) && scopesButtons.get(scope).getButton().isAttached()) {
             updateBadge(scope, +1);
             scopesButtons.get(scope).getButton().setVisible(true);
             scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
@@ -277,7 +277,7 @@ public class NotifierService implements INotifierService, Serializable {
     /** {@inheritDoc}
      */
     public void decrementBadge(com.vaadin.ui.Component scope) {
-        if (scopesButtons.containsKey(scope)) {
+        if (scopesButtons.containsKey(scope) && scopesButtons.get(scope).getButton().isAttached()) {
             updateBadge(scope, -1);
             scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
             String newCaption = getInitialCaption(scopesButtons.get(scope).getButton()) +
