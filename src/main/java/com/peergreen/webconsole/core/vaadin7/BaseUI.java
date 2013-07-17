@@ -905,7 +905,7 @@ public class BaseUI extends UI implements Serializable {
     }
 
     @Override
-    public void access(Runnable runnable) throws UIDetachedException {
+    public void accessSynchronously(Runnable runnable) throws UIDetachedException {
         Map<Class<?>, CurrentInstance> old = null;
 
         VaadinSession session = getSession();
@@ -925,12 +925,12 @@ public class BaseUI extends UI implements Serializable {
                 // acquired the lock.
                 throw new UIDetachedException();
             }
-            old = CurrentInstance.setThreadLocals(this);
+            old = CurrentInstance.setCurrent(this);
             runnable.run();
         } finally {
             session.unlock();
             if (old != null) {
-                CurrentInstance.restoreThreadLocals(old);
+                CurrentInstance.restoreInstances(old);
             }
         }
     }
