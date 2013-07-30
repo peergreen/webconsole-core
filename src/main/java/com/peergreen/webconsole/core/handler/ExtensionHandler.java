@@ -1,16 +1,21 @@
 package com.peergreen.webconsole.core.handler;
 
-import com.peergreen.webconsole.Constants;
+import com.peergreen.webconsole.ExtensionPoint;
 import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
+import com.peergreen.webconsole.Scope;
+import com.peergreen.webconsole.navigator.NavigableContext;
+import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.Qualifier;
 import com.peergreen.webconsole.UIContext;
 import com.peergreen.webconsole.Unlink;
+import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
 import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.navigator.NavigableModel;
 import com.vaadin.ui.Component;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -170,6 +175,8 @@ public class ExtensionHandler extends DependencyHandler {
                     fieldValue = ownInstanceManager.getBundleContext();
                 } else if (type.equals(ISecurityManager.class)) {
                     fieldValue = uiContext.getSecurityManager();
+                } else if (type.equals(ViewNavigator.class)) {
+                    fieldValue = uiContext.getViewNavigator();
                 } else if (type.equals(UIContext.class)) {
                     fieldValue = uiContext;
                 }
@@ -317,11 +324,51 @@ public class ExtensionHandler extends DependencyHandler {
         return newMetadata;
     }
 
+    private void setExtensionNavigationModel(Dictionary configuration) throws ConfigurationException {
+        ExtensionPoint extension = extensionType.getAnnotation(ExtensionPoint.class);
+        String alias;
+        if ("".equals(extension.alias())) {
+            if (extensionType.isAnnotationPresent(Scope.class)) {
+                Scope scope = extensionType.getAnnotation(Scope.class);
+                alias = scope.value();
+            } else {
+                alias = extensionType.getName();
+            }
+        } else {
+            alias = extension.alias();
+        }
+
+        if (alias.charAt(0) != '/') alias = '/' + alias;
+        configuration.put(EXTENSION_ALIAS, alias);
+
+        boolean found = false;
+        // get callback method
+        Method[] methods = extensionType.getDeclaredMethods();
+        for (Method method : methods) {
+            if (method.isAnnotationPresent(Navigate.class)) {
+                if (found) throw new ConfigurationException("Webconsole extension should have a unique method annotated with @Navigate");
+                // default alias is class name
+
+
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                if (parameterTypes.length != 1)
+                    throw new ConfigurationException("Method annotated with @Navigate should have one parameter");
+                else if (parameterTypes[0] != NavigableContext.class)
+                    throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of 'NavigableContext'");
+
+                NavigableModel parent = uiContext.getViewNavigator().getNavigableModel(extension.value());
+                NavigableModel navigableModel = new NavigableModel(parent, alias, getInstanceManager().getPojoObject(), method);
+                uiContext.getViewNavigator().registerNavigableModel((Component) getInstanceManager().getPojoObject(), navigableModel);
+                found = true;
+            }
+        }
+    }
+
     @Override
     public void initializeComponentFactory(ComponentTypeDescription typeDesc, Element metadata) throws ConfigurationException {
         super.initializeComponentFactory(typeDesc, metadata);
         // Tag this component as extension
-        typeDesc.addProperty(new PropertyDescription(Constants.WEBCONSOLE_EXTENSION, "java.lang.String", "true", true));
+        typeDesc.addProperty(new PropertyDescription(WEBCONSOLE_EXTENSION, "java.lang.String", "true", true));
     }
 
     @Override

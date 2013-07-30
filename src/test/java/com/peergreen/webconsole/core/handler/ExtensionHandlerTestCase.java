@@ -8,6 +8,7 @@ import com.peergreen.webconsole.core.handler.extensions.ExtensionPointProvider;
 import com.peergreen.webconsole.core.handler.extensions.TestInterface;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.metadata.Element;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -44,7 +45,7 @@ public class ExtensionHandlerTestCase {
     }
 
     @Test
-    public void testBindInjections() throws ClassNotFoundException, NoSuchFieldException {
+    public void testBindInjections() throws ClassNotFoundException, NoSuchFieldException, ConfigurationException {
         ExtensionPointProvider extensionPointProvider = new ExtensionPointProvider();
         when(uiContext.getSecurityManager()).thenReturn(securityManager);
         when(instanceManager.getPojoObject()).thenReturn(extensionPointProvider);
@@ -80,7 +81,7 @@ public class ExtensionHandlerTestCase {
     }
 
     @Test
-    public void testCreateBindings() {
+    public void testCreateBindings() throws ConfigurationException {
         ExtensionPointProvider extensionPointProvider = new ExtensionPointProvider();
         String uiId = "id-1";
 

@@ -3,16 +3,23 @@ package com.peergreen.webconsole.core.scope;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Mohammed Boukada
  */
 public class Scope {
     private String scopeName;
+    private String scopeAlias;
     private Component scopeView;
     private Button scopeMenuButton;
+    private Map<String, Method> navigatorCallbacks = new HashMap<>();
 
-    public Scope(String scopeName, Component scopeView) {
+    public Scope(String scopeName, String scopeAlias, Component scopeView) {
         this.scopeName = scopeName;
+        this.scopeAlias = scopeAlias;
         this.scopeView = scopeView;
     }
 
@@ -20,11 +27,15 @@ public class Scope {
         return scopeName;
     }
 
+    public String getScopeAlias() {
+        return scopeAlias;
+    }
+
     public void setScopeName(String scopeName) {
         this.scopeName = scopeName;
     }
 
-    public Object getScopeView() {
+    public Component getScopeView() {
         return scopeView;
     }
 
@@ -38,5 +49,9 @@ public class Scope {
 
     public void setScopeMenuButton(Button scopeMenuButton) {
         this.scopeMenuButton = scopeMenuButton;
+    }
+
+    public Map<String, Method> getNavigatorCallbacks() {
+        return navigatorCallbacks;
     }
 }

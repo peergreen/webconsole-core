@@ -9,6 +9,7 @@ import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
 import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.core.navigator.BaseViewNavigator;
 import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;
 import com.peergreen.webconsole.ISecurityManager;
@@ -16,6 +17,7 @@ import com.peergreen.webconsole.core.context.BaseUIContext;
 import com.peergreen.webconsole.core.exception.ExceptionView;
 import com.peergreen.webconsole.core.scope.ScopeFactory;
 import com.peergreen.webconsole.core.security.SecurityManager;
+import com.peergreen.webconsole.navigator.NavigableModel;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -58,6 +60,7 @@ import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.Cookie;
@@ -150,6 +153,7 @@ public class BaseUI extends UI implements Serializable {
      * Security manager
      */
     private ISecurityManager securityManager;
+    private BaseViewNavigator viewNavigator;
 
     /**
      * UI id
@@ -177,6 +181,16 @@ public class BaseUI extends UI implements Serializable {
         this.uiId = uiId;
         this.enableSecurity = enableSecurity;
         this.defaultRoles = defaultRoles;
+
+        this.viewNavigator = new BaseViewNavigator();
+        NavigableModel rootNavigableModel = new NavigableModel(null, "", null, null);
+        viewNavigator.registerNavigableModel(this, rootNavigableModel);
+        viewNavigator.setRootNavigableModel(rootNavigableModel);
+    }
+
+    @Validate
+    public void start() {
+        viewNavigator.setNotifierService(notifierService);
     }
 
     @Invalidate
@@ -244,18 +258,19 @@ public class BaseUI extends UI implements Serializable {
     @Bind(aggregate = true, optional = true)
     public void bindScopeView(Component scopeView, Dictionary props) {
         String scopeName = (String) props.get("scope.value");
-        Scope scope = new Scope(scopeName, scopeView);
-        scopes.put(scopeName, scope);
-        addRouteToNav(scopeName, scopeView);
-        addScopeButtonInMenu(scopeName, scopeView, progressIndicator.getValue() >= 1);
+        String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
+        Scope scope = new Scope(scopeName, scopeAlias, scopeView);
+        scopes.put(scopeAlias, scope);
+        addRouteToNav(scope);
+        addScopeButtonInMenu(scope, progressIndicator.getValue() >= 1);
     }
 
     @Unbind
     public void unbindScopeView(Component scopeView, Dictionary props) {
-        String scopeName = (String) props.get("scope.value");
-        removeRouteFromNav(scopeName);
-        removeScopeButtonInMenu(scopeName);
-        scopes.remove(scopeName);
+        String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
+        removeRouteFromNav(scopes.get(scopeAlias));
+        removeScopeButtonInMenu(scopes.get(scopeAlias));
+        scopes.remove(scopeAlias);
     }
 
     /**
@@ -605,6 +620,7 @@ public class BaseUI extends UI implements Serializable {
         notifierService.addNotificationsButton(notify, notifications, this);
         notifierService.addTasksBar(tasksBar, this);
         nav = new Navigator(this, content);
+        viewNavigator.setNav(nav);
         nav.addView("", new NavigatorView(new CssLayout()));
         nav.addView("/", new NavigatorView(new CssLayout()));
 
@@ -651,22 +667,37 @@ public class BaseUI extends UI implements Serializable {
         menu.addStyleName("menu");
         menu.setHeight("100%");
 
+        String f = Page.getCurrent().getUriFragment();
+        if (f != null && f.startsWith("!")) {
+            f = f.substring(1);
+        }
+        if (f == null) {
+            nav.navigateTo("/");
+        } else {
+            nav.navigateTo(f);
+        }
+
         nav.addViewChangeListener(new ViewChangeListener() {
 
             @Override
             public boolean beforeViewChange(ViewChangeEvent event) {
                 notifierService.closeAll();
+                for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
+                    scopeEntry.getValue().getScopeMenuButton().removeStyleName("selected");
+                }
+                if (event.getParameters() != null && !"".equals(event.getParameters())) {
+                    viewNavigator.navigateTo(event.getViewName() + "/" + event.getParameters(), false);
+                }
                 return true;
             }
 
             @Override
             public void afterViewChange(ViewChangeEvent event) {
+                String alias = event.getViewName();
+                if ("".equals(alias) || "/".equals(alias)) alias = "/home";
+                scopes.get(alias).getScopeMenuButton().addStyleName("selected");
             }
         });
-        nav.navigateTo("/");
-        if (scopes.containsKey("home")) {
-            scopes.get("home").getScopeMenuButton().addStyleName("selected");
-        }
     }
 
     private void buildProgressIndicatorView() {
@@ -750,38 +781,22 @@ public class BaseUI extends UI implements Serializable {
     }
 
     /**
-     * Clear menu selection
-     */
-    private void clearMenuSelection() {
-        for (Iterator<Component> it = menu.getComponentIterator(); it.hasNext();) {
-            Component next = it.next();
-            if (next instanceof NativeButton) {
-                next.removeStyleName("selected");
-            } else if (next instanceof DragAndDropWrapper) {
-                // Wow, this is ugly (even uglier than the rest of the code)
-                ((DragAndDropWrapper) next).iterator().next()
-                        .removeStyleName("selected");
-            }
-        }
-    }
-
-    /**
      * Add route for scope view to navigator
-     * @param scopeView
+     * @param scope
      */
-    private void addRouteToNav(String scopeName, Component scopeView) {
+    private void addRouteToNav(Scope scope) {
         if (nav != null) {
-            nav.removeView("/" + scopeName);
+            nav.removeView(scope.getScopeAlias());
 
             View view;
             try {
-                view = new NavigatorView(scopeView);
+                view = new NavigatorView(scope.getScopeView());
             } catch (Exception e) {
                 view = new NavigatorView(new ExceptionView(e));
             }
-            nav.addView("/" + scopeName, view);
+            nav.addView(scope.getScopeAlias(), view);
 
-            if ("home".equals(scopeName.toLowerCase())) {
+            if ("home".equals(scope.getScopeName().toLowerCase())) {
                 nav.addView("", view);
                 nav.addView("/", view);
             }
@@ -790,12 +805,12 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Remove route for scope view from navigator
-     * @param scopeName
+     * @param scope
      */
-    private void removeRouteFromNav(String scopeName) {
+    private void removeRouteFromNav(Scope scope) {
         if (nav != null) {
-            nav.removeView("/" + scopeName);
-            if ("home".equals(scopeName)) {
+            nav.removeView(scope.getScopeAlias());
+            if ("home".equals(scope.getScopeName())) {
                 nav.removeView("");
                 nav.removeView("/");
             }
@@ -804,30 +819,29 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Add scope button in menu
-     * @param scopeName
+     * @param scope
      * @param notify for notifierService to show badge
      */
-    private void addScopeButtonInMenu(final String scopeName, final Component scopeView, boolean notify) {
+    private void addScopeButtonInMenu(final Scope scope, boolean notify) {
         if (menu != null) {
-            final Button b = new NativeButton(scopeName.toUpperCase());
+            final Button b = new NativeButton(scope.getScopeName().toUpperCase());
 
             b.addStyleName("icon-dashboard");
 
             b.addClickListener(new Button.ClickListener() {
                 @Override
                 public void buttonClick(Button.ClickEvent event) {
-                    clearMenuSelection();
-                    notifierService.removeBadge(scopeView);
-                    event.getButton().addStyleName("selected");
-                    nav.navigateTo("/" + scopeName);
+                    //clearMenuSelection();
+                    notifierService.removeBadge(scope.getScopeView());
+                    nav.navigateTo(scope.getScopeAlias());
                 }
             });
 
-            sortButtonsInMenu(scopeName, b);
+            sortButtonsInMenu(scope.getScopeAlias(), b);
 
-            notifierService.addScopeButton(scopeView, b, this, notify);
+            notifierService.addScopeButton(scope.getScopeView(), b, this, notify);
 
-            scopes.get(scopeName).setScopeMenuButton(b);
+            scopes.get(scope.getScopeAlias()).setScopeMenuButton(b);
 
             if (nbScopesToBound > 0) {
                 Float progressIndicatorValue = progressIndicator.getValue();
@@ -839,40 +853,41 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Remove scope button from menu
-     * @param scopeName
+     * @param scope
      */
-    private void removeScopeButtonInMenu(final String scopeName) {
-        if (scopes.get(scopeName).getScopeMenuButton() != null) {
+    private void removeScopeButtonInMenu(final Scope scope) {
+        if (scope.getScopeMenuButton() != null) {
             access(new Runnable() {
                 @Override
                 public void run() {
-                    menu.removeComponent(scopes.get(scopeName).getScopeMenuButton());
+                    menu.removeComponent(scope.getScopeMenuButton());
                 }
             });
-            scopes.get(scopeName).setScopeMenuButton(null);
-            notifierService.removeScopeButton((Component) scopes.get(scopeName).getScopeView());
+            scope.setScopeMenuButton(null);
+            notifierService.removeScopeButton(scope.getScopeView());
         }
     }
 
-    private void sortButtonsInMenu(final String scopeName, Button b) {
+    private void sortButtonsInMenu(final String scopeAlias, final Button b) {
         final LinkedList<String> scopesNames = new LinkedList<>();
         for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
-            scopesNames.add(scopeEntry.getKey());
+            scopesNames.add(scopeEntry.getValue().getScopeAlias());
         }
         Collections.sort(scopesNames);
-        if (scopesNames.contains("home")) {
-            scopesNames.remove("home");
-            scopesNames.addFirst("home");
+        if (scopesNames.contains("/home")) {
+            scopesNames.remove("/home");
+            scopesNames.addFirst("/home");
         }
 
         final List<Button> buttonsToShift = new LinkedList<>();
         buttonsToShift.add(b);
+
         access(new Runnable() {
             @Override
             public void run() {
                 for (String scope : scopesNames) {
-                    if ("home".equals(scope)) continue;
-                    if ("home".equals(scopeName) || scopeName.compareTo(scope) < 0) {
+                    if ("/home".equals(scope)) continue;
+                    if ("/home".equals(scopeAlias) || scopeAlias.compareTo(scope) < 0) {
                         buttonsToShift.add(scopes.get(scope).getScopeMenuButton());
                         menu.removeComponent(scopes.get(scope).getScopeMenuButton());
                     }
