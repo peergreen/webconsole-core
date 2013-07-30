@@ -25,6 +25,7 @@ import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
@@ -36,7 +37,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
@@ -65,7 +65,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -206,16 +205,10 @@ public class BaseUI extends UI implements Serializable {
                 if (isAllowedToShowScope(roles)) {
                     boolean failed = false;
                     try {
-                        InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, securityManager, uiId));
+                        InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
                         if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
                         scopeFactory.setInstance(instance);
-                    } catch (MissingHandlerException e) {
-                        e.printStackTrace();
-                        failed = true;
-                    } catch (UnacceptableConfiguration unacceptableConfiguration) {
-                        unacceptableConfiguration.printStackTrace();
-                        failed = true;
-                    } catch (ConfigurationException e) {
+                    } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
                         e.printStackTrace();
                         failed = true;
                     }
@@ -462,7 +455,6 @@ public class BaseUI extends UI implements Serializable {
         menu = new CssLayout();
         menu.setId("webconsole_mainlayout_id");
         content = new CssLayout();
-        //buildRoutes();
 
         notifierService.closeAll();
         final Button notify = new Button("");
@@ -547,7 +539,7 @@ public class BaseUI extends UI implements Serializable {
                                                     }
                                                 }
                                                 nbScopesToBound = 0;
-                                                progressIndicator.setValue(Float.valueOf(0));
+                                                progressIndicator.setValue((float) 0);
                                                 getSession().setAttribute("is.logged", false);
                                                 buildLoginView(true);
                                             }
@@ -634,16 +626,10 @@ public class BaseUI extends UI implements Serializable {
                 ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
                 boolean failed = false;
                 try {
-                    InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, securityManager, uiId));
+                    InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
                     if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
                     scopeFactory.setInstance(instance);
-                } catch (MissingHandlerException e) {
-                    e.printStackTrace();
-                    failed = true;
-                } catch (UnacceptableConfiguration unacceptableConfiguration) {
-                    unacceptableConfiguration.printStackTrace();
-                    failed = true;
-                } catch (ConfigurationException e) {
+                } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
                     e.printStackTrace();
                     failed = true;
                 }
@@ -755,8 +741,8 @@ public class BaseUI extends UI implements Serializable {
         String[] words = title.split(" ");
         StringBuilder sb = new StringBuilder();
         sb.append("<center><span>");
-        for (int i = 0; i < words.length; i++) {
-            sb.append(words[i]);
+        for (String word : words) {
+            sb.append(word);
             sb.append("<br />");
         }
         sb.append("</span></center>");
@@ -900,8 +886,7 @@ public class BaseUI extends UI implements Serializable {
     }
 
     private boolean isAllowedToShowScope(String[] rolesAllowed) {
-        if (securityManager == null) return true;
-        return securityManager.isUserInRoles(rolesAllowed);
+        return securityManager == null || securityManager.isUserInRoles(rolesAllowed);
     }
 
     @Override
@@ -949,7 +934,14 @@ public class BaseUI extends UI implements Serializable {
                         }
                     });
                 }
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException e) {
+                access(new Runnable() {
+                    @Override
+                    public void run() {
+                        showMainContent();
+                    }
+                });
+            }
         }
     }
 

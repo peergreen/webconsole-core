@@ -1,6 +1,5 @@
 package com.peergreen.webconsole.core.vaadin7;
 
-import com.peergreen.webconsole.Constants;
 import com.vaadin.server.SessionDestroyEvent;
 import com.vaadin.server.SessionDestroyListener;
 import com.vaadin.server.UIClassSelectionEvent;
@@ -22,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+
+import static com.peergreen.webconsole.Constants.*;
 
 /**
  * Vaadin Base console UI provider
@@ -93,18 +94,17 @@ public class BaseUIProvider extends UIProvider {
         BaseUI ui = null;
         try {
             // Create an instance of baseUI
-            String scopeExtensionPoint = "com.peergreen.webconsole.scope";
             String uiId = consoleAlias + "-" + i;
-            ui = new BaseUI(consoleName, scopeExtensionPoint, uiId, enableSecurity, defaultRoles);
+            ui = new BaseUI(consoleName, SCOPE_EXTENSION_POINT, uiId, enableSecurity, defaultRoles);
             // register the ui to broadcaster
             //DatabaseProvider.javaBroadcaster.register(ui);
             // Configuration properties for ipojo component
             Dictionary<String, Object> props = new Hashtable<>();
             props.put("instance.object", ui);
             Dictionary<String, Object> bindFilters = new Hashtable<>();
-            bindFilters.put("ScopeView", "(&(" + Constants.UI_ID + "=" + uiId + ")(" +
-                    Constants.EXTENSION_POINT + "=" + scopeExtensionPoint + "))");
-            props.put(Constants.REQUIRES_FILTER, bindFilters);
+            bindFilters.put("ScopeView", "(&(" + UI_ID + "=" + uiId + ")(" +
+                    EXTENSION_POINT + "=" + SCOPE_EXTENSION_POINT + "))");
+            props.put(REQUIRES_FILTER, bindFilters);
 
             // Create ipojo component from its factory
             final ComponentInstance instance = factory.createComponentInstance(props);
@@ -117,12 +117,8 @@ public class BaseUIProvider extends UIProvider {
             });
             uis.add(instance);
             i++;
-        } catch (UnacceptableConfiguration unacceptableConfiguration) {
+        } catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException unacceptableConfiguration) {
             unacceptableConfiguration.printStackTrace();
-        } catch (MissingHandlerException ex) {
-            ex.printStackTrace();
-        } catch (ConfigurationException ex) {
-            ex.printStackTrace();
         }
 
         return ui;

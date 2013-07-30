@@ -44,6 +44,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static com.peergreen.webconsole.Constants.*;
+import static java.lang.String.format;
+
 /**
  * @author Mohammed Boukada
  */
@@ -52,14 +55,14 @@ import java.util.Map;
 public class ExtensionHandler extends DependencyHandler {
 
     private Class<?> extensionType;
-    private Map<String, ExtensionPoint> bindings;
-    private List<Field> fieldsToBind;
-    private Map<ExtensionFactory, InstanceHandler> instances = new HashMap<>();
-    private List<LinkDependencyCallback> dependencyCallbacks = new ArrayList<>();
     private UIContext uiContext;
     private InstanceManager ownInstanceManager = new OwnInstanceManager();
     private INotifierService notifierService;
+    private List<Field> fieldsToBind;
+    private List<LinkDependencyCallback> dependencyCallbacks = new ArrayList<>();
     private List<String> notifications = new LinkedList<>();
+    private Map<String, ExtensionPointModel> bindings;
+    private Map<ExtensionFactory, InstanceHandler> extensionFactories = new HashMap<>();
 
     public void setOwnInstanceManager(InstanceManager instanceManager) {
         this.ownInstanceManager = instanceManager;
@@ -71,12 +74,15 @@ public class ExtensionHandler extends DependencyHandler {
 
     @Override
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
-        uiContext = (UIContext) configuration.get(Constants.UI_CONTEXT);
-        configuration.remove(Constants.UI_CONTEXT);
-        configuration.put(Constants.UI_ID, uiContext.getUIId());
+        uiContext = (UIContext) configuration.get(UI_CONTEXT);
+        if (uiContext == null) throw new ConfigurationException("Missing UI Context");
+
+        configuration.remove(UI_CONTEXT);
+        configuration.put(UI_ID, uiContext.getUIId());
 
         setExtensionType();
         setExtensionProperties(configuration);
+        setExtensionNavigationModel(configuration);
         bindInjections();
 
         // Add instance state listener to (un)register component specifications as services
@@ -92,9 +98,10 @@ public class ExtensionHandler extends DependencyHandler {
     @Override
     public void stop() {
         super.stop();
-        for (Map.Entry<ExtensionFactory, InstanceHandler> instance : instances.entrySet()) {
+        for (Map.Entry<ExtensionFactory, InstanceHandler> instance : extensionFactories.entrySet()) {
             instance.getValue().stop();
         }
+        uiContext.getViewNavigator().unregisterNavigableModel((Component) getInstanceManager().getPojoObject());
     }
 
     @Override
@@ -110,14 +117,8 @@ public class ExtensionHandler extends DependencyHandler {
             try {
                 instanceHandler = extensionFactory.create(uiContext);
                 if (InstanceState.STOPPED.equals(instanceHandler.getState())) failed = true;
-                instances.put(extensionFactory, instanceHandler);
-            } catch (MissingHandlerException e) {
-                e.printStackTrace();
-                failed = true;
-            } catch (UnacceptableConfiguration unacceptableConfiguration) {
-                unacceptableConfiguration.printStackTrace();
-                failed = true;
-            } catch (ConfigurationException e) {
+                extensionFactories.put(extensionFactory, instanceHandler);
+            } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
                 e.printStackTrace();
                 failed = true;
             }
@@ -131,9 +132,9 @@ public class ExtensionHandler extends DependencyHandler {
 
     @Unbind
     public void unbindExtensionFactory(ExtensionFactory extensionFactory) {
-        if (instances.containsKey(extensionFactory)) {
-            instances.get(extensionFactory).stop();
-            instances.remove(extensionFactory);
+        if (extensionFactories.containsKey(extensionFactory)) {
+            extensionFactories.get(extensionFactory).stop();
+            extensionFactories.remove(extensionFactory);
         }
     }
 
@@ -147,9 +148,7 @@ public class ExtensionHandler extends DependencyHandler {
                     Object value = null;
                     try {
                         value = method.invoke(annotation);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
+                    } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
                     configuration.put(propertiesPrefix + "." + method.getName(), method.getReturnType().cast(value));
@@ -159,7 +158,7 @@ public class ExtensionHandler extends DependencyHandler {
         return configuration;
     }
 
-    protected List<Field> bindInjections() {
+    protected List<Field> bindInjections() throws ConfigurationException {
         fieldsToBind = new ArrayList<>();
         Field[] fields = extensionType.getDeclaredFields();
         for (Field field : fields) {
@@ -183,7 +182,7 @@ public class ExtensionHandler extends DependencyHandler {
                         fieldsToBind.add(field);
                     }
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    throw new ConfigurationException(format("Fail to set the field '%s' type of '%s'", field.getName(), field.getType().getName()));
                 }
             }
         }
@@ -215,17 +214,17 @@ public class ExtensionHandler extends DependencyHandler {
     }
 
     private boolean canBindExtensionFactory(Dictionary properties) {
-        String extensionId = (String) properties.get(Constants.EXTENSION_POINT);
+        String extensionId = (String) properties.get(EXTENSION_POINT);
         return extensionId != null && bindings.containsKey(extensionId) && isInRoles(properties);
     }
 
     private boolean isInRoles(Dictionary properties) {
         if (uiContext.getSecurityManager() == null) return true;
-        String[] extensionRoles = (String[]) properties.get(Constants.EXTENSION_ROLES);
+        String[] extensionRoles = (String[]) properties.get(EXTENSION_ROLES);
         return uiContext.getSecurityManager().isUserInRoles(extensionRoles);
     }
 
-    protected Element createBindings(Element metadata) {
+    protected Element createBindings(Element metadata) throws ConfigurationException {
         Method[] methods = extensionType.getDeclaredMethods();
         bindings = new HashMap<>();
 
@@ -246,18 +245,18 @@ public class ExtensionHandler extends DependencyHandler {
                 String extensionPointId = extensionType.getName() + "." + extensionName;
                 String filter = "";
                 if (uiContext != null) {
-                    filter = "(&(" + Constants.UI_ID + "=" + uiContext.getUIId() + ")(" +
-                            Constants.EXTENSION_POINT + "=" + extensionPointId + "))";
+                    filter = "(&(" + UI_ID + "=" + uiContext.getUIId() + ")(" +
+                            EXTENSION_POINT + "=" + extensionPointId + "))";
                 }
 
                 if (bindings.containsKey(extensionPointId)) {
                     if (bindings.get(extensionPointId).getBindMethod() == null) {
                         bindings.get(extensionPointId).setBindMethod(method);
                     } else {
-                        // throw exception
+                        throw new ConfigurationException("Bind method already defined");
                     }
                 } else {
-                    bindings.put(extensionPointId, new ExtensionPoint(method, null, filter));
+                    bindings.put(extensionPointId, new ExtensionPointModel(method, null, filter));
                 }
             }
             if (method.isAnnotationPresent(Unlink.class)) {
@@ -266,43 +265,44 @@ public class ExtensionHandler extends DependencyHandler {
                 String extensionPointId = extensionType.getName() + "." + extensionName;
                 String filter = "";
                 if (uiContext != null) {
-                    filter = "(&(" + Constants.UI_ID + "=" + uiContext.getUIId() + ")(" +
-                            Constants.EXTENSION_POINT + "=" + extensionPointId + "))";
+                    filter = "(&(" + UI_ID + "=" + uiContext.getUIId() + ")(" +
+                            EXTENSION_POINT + "=" + extensionPointId + "))";
                 }
                 if (bindings.containsKey(extensionPointId)) {
                     if (bindings.get(extensionPointId).getUnbindMethod() == null) {
                         bindings.get(extensionPointId).setUnbindMethod(method);
                     } else {
-                        // throw exception
+                        throw new ConfigurationException("Unbind method already defined");
                     }
                 } else {
-                    bindings.put(extensionPointId, new ExtensionPoint(null, method, filter));
+                    bindings.put(extensionPointId, new ExtensionPointModel(null, method, filter));
                 }
             }
+
         }
 
-        for (Map.Entry<String, ExtensionPoint> binding : bindings.entrySet()) {
+        for (Map.Entry<String, ExtensionPointModel> binding : bindings.entrySet()) {
             String extensionPointId = binding.getKey();
-            ExtensionPoint extensionPoint = binding.getValue();
+            ExtensionPointModel extensionPointModel = binding.getValue();
 
             Element requires = new Element("requires", null);
-            if (!"".equals(extensionPoint.getFilter())) {
-                requires.addAttribute(new Attribute("filter", extensionPoint.getFilter()));
+            if (!"".equals(extensionPointModel.getFilter())) {
+                requires.addAttribute(new Attribute("filter", extensionPointModel.getFilter()));
             }
             requires.addAttribute(new Attribute("optional", "true"));
             requires.addAttribute(new Attribute("aggregate", "true"));
             requires.addAttribute(new Attribute("id", extensionPointId));
 
-            if (extensionPoint.getBindMethod() != null) {
+            if (extensionPointModel.getBindMethod() != null) {
                 Element bindCallback = new Element("callback", null);
-                bindCallback.addAttribute(new Attribute("method", extensionPoint.getBindMethod().getName()));
+                bindCallback.addAttribute(new Attribute("method", extensionPointModel.getBindMethod().getName()));
                 bindCallback.addAttribute(new Attribute("type", "bind"));
                 requires.addElement(bindCallback);
             }
 
-            if (extensionPoint.getUnbindMethod() != null) {
+            if (extensionPointModel.getUnbindMethod() != null) {
                 Element unbindCallback = new Element("callback", null);
-                unbindCallback.addAttribute(new Attribute("method", extensionPoint.getUnbindMethod().getName()));
+                unbindCallback.addAttribute(new Attribute("method", extensionPointModel.getUnbindMethod().getName()));
                 unbindCallback.addAttribute(new Attribute("type", "unbind"));
                 requires.addElement(unbindCallback);
             }
