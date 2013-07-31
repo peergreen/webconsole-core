@@ -58,6 +58,7 @@ import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
@@ -81,6 +82,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Theme("dashboard")
 @PreserveOnRefresh
 @org.apache.felix.ipojo.annotations.Component
+@Provides(specifications = UI.class)
 @Push
 public class BaseUI extends UI implements Serializable {
 
