@@ -5,6 +5,7 @@ import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.Scope;
+import com.peergreen.webconsole.navigator.Navigable;
 import com.peergreen.webconsole.navigator.NavigableContext;
 import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.Qualifier;
@@ -326,41 +327,51 @@ public class ExtensionHandler extends DependencyHandler {
 
     private void setExtensionNavigationModel(Dictionary configuration) throws ConfigurationException {
         ExtensionPoint extension = extensionType.getAnnotation(ExtensionPoint.class);
-        String alias;
-        if ("".equals(extension.alias())) {
-            if (extensionType.isAnnotationPresent(Scope.class)) {
-                Scope scope = extensionType.getAnnotation(Scope.class);
+        String alias = "";
+
+        if (extensionType.isAnnotationPresent(Navigable.class) || extensionType.isAnnotationPresent(Scope.class)) {
+            Navigable navigable = extensionType.getAnnotation(Navigable.class);
+            Scope scope = extensionType.getAnnotation(Scope.class);
+
+            if (navigable != null && !"".equals(navigable.value())) {
+                alias = navigable.value();
+            } else if (scope != null) {
                 alias = scope.value();
-            } else {
+            } else if ("".equals(alias)) {
                 alias = extensionType.getName();
             }
-        } else {
-            alias = extension.alias();
+            if (alias.charAt(0) != '/') {
+                alias = '/' + alias;
+            }
+
+            boolean found = false;
+            // get callback method
+            Method[] methods = extensionType.getDeclaredMethods();
+            for (Method method : methods) {
+                if (method.isAnnotationPresent(Navigate.class)) {
+                    if (found) {
+                        throw new ConfigurationException("Webconsole extension should have a unique method annotated with @Navigate");
+                    }
+
+                    // default alias is class name
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    if (parameterTypes.length != 1){
+                        throw new ConfigurationException("Method annotated with @Navigate should have one parameter");
+                    }
+                    else if (parameterTypes[0] != NavigableContext.class) {
+                        throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of 'NavigableContext'");
+                    }
+
+                    NavigableModel parent = uiContext.getViewNavigator().getNavigableModel(extension.value());
+                    NavigableModel navigableModel = new NavigableModel(parent, alias, getInstanceManager().getPojoObject(), method);
+                    uiContext.getViewNavigator().registerNavigableModel((Component) getInstanceManager().getPojoObject(), navigableModel);
+                    found = true;
+                }
+            }
         }
 
-        if (alias.charAt(0) != '/') alias = '/' + alias;
-        configuration.put(EXTENSION_ALIAS, alias);
-
-        boolean found = false;
-        // get callback method
-        Method[] methods = extensionType.getDeclaredMethods();
-        for (Method method : methods) {
-            if (method.isAnnotationPresent(Navigate.class)) {
-                if (found) throw new ConfigurationException("Webconsole extension should have a unique method annotated with @Navigate");
-                // default alias is class name
-
-
-                Class<?>[] parameterTypes = method.getParameterTypes();
-                if (parameterTypes.length != 1)
-                    throw new ConfigurationException("Method annotated with @Navigate should have one parameter");
-                else if (parameterTypes[0] != NavigableContext.class)
-                    throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of 'NavigableContext'");
-
-                NavigableModel parent = uiContext.getViewNavigator().getNavigableModel(extension.value());
-                NavigableModel navigableModel = new NavigableModel(parent, alias, getInstanceManager().getPojoObject(), method);
-                uiContext.getViewNavigator().registerNavigableModel((Component) getInstanceManager().getPojoObject(), navigableModel);
-                found = true;
-            }
+        if (!"".equals(alias)) {
+            configuration.put(EXTENSION_ALIAS, alias);
         }
     }
 
