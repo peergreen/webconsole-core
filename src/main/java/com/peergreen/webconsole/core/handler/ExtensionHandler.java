@@ -81,7 +81,9 @@ public class ExtensionHandler extends DependencyHandler {
     @Override
     public void configure(Element metadata, Dictionary configuration) throws ConfigurationException {
         uiContext = (UIContext) configuration.get(UI_CONTEXT);
-        if (uiContext == null) throw new ConfigurationException("Missing UI Context");
+        if (uiContext == null) {
+            throw new ConfigurationException("Missing UI Context");
+        }
 
         configuration.remove(UI_CONTEXT);
         configuration.put(UI_ID, uiContext.getUIId());
@@ -144,7 +146,7 @@ public class ExtensionHandler extends DependencyHandler {
         }
     }
 
-    protected Dictionary setExtensionProperties(Dictionary configuration) {
+    protected Dictionary setExtensionProperties(Dictionary configuration) throws ConfigurationException {
         Annotation[] annotations = extensionType.getDeclaredAnnotations();
         for (Annotation annotation : annotations) {
             if (annotation.annotationType().isAnnotationPresent(Qualifier.class)) {
@@ -155,7 +157,7 @@ public class ExtensionHandler extends DependencyHandler {
                     try {
                         value = method.invoke(annotation);
                     } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
+                        throw new ConfigurationException(e.getMessage());
                     }
                     configuration.put(propertiesPrefix + "." + method.getName(), method.getReturnType().cast(value));
                 }
@@ -209,7 +211,9 @@ public class ExtensionHandler extends DependencyHandler {
         Class<?>[] classes = new Class[specificationsArrayLength];
         System.arraycopy(interfaces, 0, classes, 0, interfaces.length);
         classes[interfaces.length] = superClass;
-        if (superSuperClass != null) classes[interfaces.length + 1] = superSuperClass;
+        if (superSuperClass != null) {
+            classes[interfaces.length + 1] = superSuperClass;
+        }
 
         List<String> specificationsList = new ArrayList<>();
         for (Class<?> clazz : classes) {
@@ -227,7 +231,9 @@ public class ExtensionHandler extends DependencyHandler {
     }
 
     private boolean isInRoles(Dictionary properties) {
-        if (uiContext.getSecurityManager() == null) return true;
+        if (uiContext.getSecurityManager() == null) {
+            return true;
+        }
         String[] extensionRoles = (String[]) properties.get(EXTENSION_ROLES);
         return uiContext.getSecurityManager().isUserInRoles(extensionRoles);
     }
@@ -253,8 +259,7 @@ public class ExtensionHandler extends DependencyHandler {
                 String extensionPointId = extensionType.getName() + "." + extensionName;
                 String filter = "";
                 if (uiContext != null) {
-                    filter = "(&(" + UI_ID + "=" + uiContext.getUIId() + ")(" +
-                            EXTENSION_POINT + "=" + extensionPointId + "))";
+                    filter = String.format("(&(%s=%s)(%s=%s))", UI_ID, uiContext.getUIId(), EXTENSION_POINT, extensionPointId);
                 }
 
                 if (bindings.containsKey(extensionPointId)) {
@@ -273,8 +278,7 @@ public class ExtensionHandler extends DependencyHandler {
                 String extensionPointId = extensionType.getName() + "." + extensionName;
                 String filter = "";
                 if (uiContext != null) {
-                    filter = "(&(" + UI_ID + "=" + uiContext.getUIId() + ")(" +
-                            EXTENSION_POINT + "=" + extensionPointId + "))";
+                    filter = String.format("(&(%s=%s)(%s=%s))", UI_ID, uiContext.getUIId(), EXTENSION_POINT, extensionPointId);
                 }
                 if (bindings.containsKey(extensionPointId)) {
                     if (bindings.get(extensionPointId).getUnbindMethod() == null) {

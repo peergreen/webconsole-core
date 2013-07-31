@@ -44,10 +44,14 @@ public class BaseViewNavigator implements ViewNavigator {
 
         NavigableModel navigableModel = null;
         for (Map.Entry<Component, NavigableModel> navigable : navigableModels.entrySet()) {
-            if (localPath.equals(navigable.getValue().getFullPath())) navigableModel = navigable.getValue();
+            if (localPath.equals(navigable.getValue().getFullPath())) {
+                navigableModel = navigable.getValue();
+            }
         }
 
-        if (navigableModel == null) notifierService.addNotification(String.format("Cannot navigate to '%s'", path));
+        if (navigableModel == null) {
+            notifierService.addNotification(String.format("Cannot navigate to '%s'", path));
+        }
         else {
             BaseNavigableContext context = new BaseNavigableContext(UrlFragment.subFirstFragment(path));
             try {
@@ -60,19 +64,25 @@ public class BaseViewNavigator implements ViewNavigator {
                 notifierService.addNotification(String.format("Cannot navigate to '%s'", path));
             }
         }
-        if (navigate) nav.navigateTo(path);
+        if (navigate) {
+            nav.navigateTo(path);
+        }
     }
 
     @Override
-    public String getUrlOf(String extension) {
+    public String getLocation(String extension) {
         return getNavigableModel(extension).getFullPath();
     }
 
     @Override
     public NavigableModel getNavigableModel(String extension) {
-        if (Constants.SCOPE_EXTENSION_POINT.equals(extension)) return root;
+        if (Constants.SCOPE_EXTENSION_POINT.equals(extension)) {
+            return root;
+        }
         for (Map.Entry<Component, NavigableModel> navigableModel : navigableModels.entrySet()) {
-            if (extension.startsWith(navigableModel.getKey().getClass().getName())) return navigableModel.getValue();
+            if (extension.startsWith(navigableModel.getKey().getClass().getName())) {
+                return navigableModel.getValue();
+            }
         }
         return null;
     }

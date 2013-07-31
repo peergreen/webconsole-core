@@ -150,7 +150,7 @@ public class ExtensionHandlerTestCase {
     }
 
     @Test
-    public void testSetExtensionProperties() {
+    public void testSetExtensionProperties() throws ConfigurationException {
         ExtensionExample extensionExample = new ExtensionExample();
 
         when(instanceManager.getPojoObject()).thenReturn(extensionExample);
