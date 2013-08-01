@@ -10,11 +10,9 @@ import com.peergreen.webconsole.core.extension.InstanceHandler;
 import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.core.navigator.BaseViewNavigator;
-import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;
 import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.core.context.BaseUIContext;
-import com.peergreen.webconsole.core.exception.ExceptionView;
 import com.peergreen.webconsole.core.scope.ScopeFactory;
 import com.peergreen.webconsole.core.security.SecurityManager;
 import com.peergreen.webconsole.navigator.NavigableModel;
@@ -25,8 +23,6 @@ import com.vaadin.data.Property;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
-import com.vaadin.navigator.View;
-import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
@@ -115,7 +111,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Content layout
      */
-    CssLayout content;
+    CssLayout content = new CssLayout();
 
     Window notifications;
 
@@ -184,10 +180,9 @@ public class BaseUI extends UI implements Serializable {
         this.enableSecurity = enableSecurity;
         this.defaultRoles = defaultRoles;
 
-        this.viewNavigator = new BaseViewNavigator();
         NavigableModel rootNavigableModel = new NavigableModel(null, "", null, null);
-        viewNavigator.registerNavigableModel(this, rootNavigableModel);
-        viewNavigator.setRootNavigableModel(rootNavigableModel);
+        this.nav = new Navigator(this, content);
+        this.viewNavigator = new BaseViewNavigator(nav, rootNavigableModel);
     }
 
     @Validate
@@ -263,14 +258,14 @@ public class BaseUI extends UI implements Serializable {
         String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
         Scope scope = new Scope(scopeName, scopeAlias, scopeView);
         scopes.put(scopeAlias, scope);
-        addRouteToNav(scope);
+        viewNavigator.addRoute(scope);
         addScopeButtonInMenu(scope, progressIndicator.getValue() >= 1);
     }
 
     @Unbind
     public void unbindScopeView(Component scopeView, Dictionary props) {
         String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
-        removeRouteFromNav(scopes.get(scopeAlias));
+        viewNavigator.removeRoute(scopes.get(scopeAlias));
         removeScopeButtonInMenu(scopes.get(scopeAlias));
         scopes.remove(scopeAlias);
     }
@@ -471,7 +466,6 @@ public class BaseUI extends UI implements Serializable {
         getPage().setTitle(consoleName);
         menu = new CssLayout();
         menu.setId("webconsole_mainlayout_id");
-        content = new CssLayout();
 
         notifierService.closeAll();
         final Button notify = new Button("");
@@ -621,10 +615,6 @@ public class BaseUI extends UI implements Serializable {
         buildNotifications();
         notifierService.addNotificationsButton(notify, notifications, this);
         notifierService.addTasksBar(tasksBar, this);
-        nav = new Navigator(this, content);
-        viewNavigator.setNav(nav);
-        nav.addView("", new NavigatorView(new CssLayout()));
-        nav.addView("/", new NavigatorView(new CssLayout()));
 
         menu.removeAllComponents();
 
@@ -674,32 +664,32 @@ public class BaseUI extends UI implements Serializable {
             f = f.substring(1);
         }
         if (f == null) {
-            nav.navigateTo("/");
+            viewNavigator.navigateTo("/");
         } else {
-            nav.navigateTo(f);
+            viewNavigator.navigateTo(f);
         }
 
-        nav.addViewChangeListener(new ViewChangeListener() {
-
-            @Override
-            public boolean beforeViewChange(ViewChangeEvent event) {
-                notifierService.closeAll();
-                for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
-                    scopeEntry.getValue().getScopeMenuButton().removeStyleName("selected");
-                }
-                if (event.getParameters() != null && !"".equals(event.getParameters())) {
-                    viewNavigator.navigateTo(event.getViewName() + "/" + event.getParameters(), false);
-                }
-                return true;
-            }
-
-            @Override
-            public void afterViewChange(ViewChangeEvent event) {
-                String alias = event.getViewName();
-                if ("".equals(alias) || "/".equals(alias)) alias = "/home";
-                scopes.get(alias).getScopeMenuButton().addStyleName("selected");
-            }
-        });
+//        nav.addViewChangeListener(new ViewChangeListener() {
+//
+//            @Override
+//            public boolean beforeViewChange(ViewChangeEvent event) {
+//                notifierService.closeAll();
+//                for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
+//                    scopeEntry.getValue().getScopeMenuButton().removeStyleName("selected");
+//                }
+//                if (event.getParameters() != null && !"".equals(event.getParameters())) {
+//                    viewNavigator.navigate(event.getViewName() + "/" + event.getParameters());
+//                }
+//                return true;
+//            }
+//
+//            @Override
+//            public void afterViewChange(ViewChangeEvent event) {
+//                String alias = event.getViewName();
+//                if ("".equals(alias) || "/".equals(alias)) alias = "/home";
+//                scopes.get(alias).getScopeMenuButton().addStyleName("selected");
+//            }
+//        });
     }
 
     private void buildProgressIndicatorView() {
@@ -782,42 +772,42 @@ public class BaseUI extends UI implements Serializable {
         return sb.toString();
     }
 
-    /**
-     * Add route for scope view to navigator
-     * @param scope
-     */
-    private void addRouteToNav(Scope scope) {
-        if (nav != null) {
-            nav.removeView(scope.getScopeAlias());
-
-            View view;
-            try {
-                view = new NavigatorView(scope.getScopeView());
-            } catch (Exception e) {
-                view = new NavigatorView(new ExceptionView(e));
-            }
-            nav.addView(scope.getScopeAlias(), view);
-
-            if ("home".equals(scope.getScopeName().toLowerCase())) {
-                nav.addView("", view);
-                nav.addView("/", view);
-            }
-        }
-    }
-
-    /**
-     * Remove route for scope view from navigator
-     * @param scope
-     */
-    private void removeRouteFromNav(Scope scope) {
-        if (nav != null) {
-            nav.removeView(scope.getScopeAlias());
-            if ("home".equals(scope.getScopeName())) {
-                nav.removeView("");
-                nav.removeView("/");
-            }
-        }
-    }
+//    /**
+//     * Add route for scope view to navigator
+//     * @param scope
+//     */
+//    private void addRouteToNav(Scope scope) {
+//        if (nav != null) {
+//            nav.removeView(scope.getScopeAlias());
+//
+//            View view;
+//            try {
+//                view = new NavigatorView(scope.getScopeView());
+//            } catch (Exception e) {
+//                view = new NavigatorView(new ExceptionView(e));
+//            }
+//            nav.addView(scope.getScopeAlias(), view);
+//
+//            if ("home".equals(scope.getScopeName().toLowerCase())) {
+//                nav.addView("", view);
+//                nav.addView("/", view);
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Remove route for scope view from navigator
+//     * @param scope
+//     */
+//    private void removeRouteFromNav(Scope scope) {
+//        if (nav != null) {
+//            nav.removeView(scope.getScopeAlias());
+//            if ("home".equals(scope.getScopeName())) {
+//                nav.removeView("");
+//                nav.removeView("/");
+//            }
+//        }
+//    }
 
     /**
      * Add scope button in menu
@@ -835,7 +825,7 @@ public class BaseUI extends UI implements Serializable {
                 public void buttonClick(Button.ClickEvent event) {
                     //clearMenuSelection();
                     notifierService.removeBadge(scope.getScopeView());
-                    nav.navigateTo(scope.getScopeAlias());
+                    viewNavigator.navigateTo(scope.getScopeAlias());
                 }
             });
 

@@ -332,6 +332,7 @@ public class ExtensionHandler extends DependencyHandler {
     private void setExtensionNavigationModel(Dictionary configuration) throws ConfigurationException {
         ExtensionPoint extension = extensionType.getAnnotation(ExtensionPoint.class);
         String alias = "";
+        Method callbackMethod = null;
 
         if (extensionType.isAnnotationPresent(Navigable.class) || extensionType.isAnnotationPresent(Scope.class)) {
             Navigable navigable = extensionType.getAnnotation(Navigable.class);
@@ -349,9 +350,7 @@ public class ExtensionHandler extends DependencyHandler {
             }
 
             boolean found = false;
-            // get callback method
-            Method[] methods = extensionType.getDeclaredMethods();
-            for (Method method : methods) {
+            for (Method method : extensionType.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(Navigate.class)) {
                     if (found) {
                         throw new ConfigurationException("Webconsole extension should have a unique method annotated with @Navigate");
@@ -365,16 +364,16 @@ public class ExtensionHandler extends DependencyHandler {
                     else if (parameterTypes[0] != NavigableContext.class) {
                         throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of 'NavigableContext'");
                     }
-
-                    NavigableModel parent = uiContext.getViewNavigator().getNavigableModel(extension.value());
-                    NavigableModel navigableModel = new NavigableModel(parent, alias, getInstanceManager().getPojoObject(), method);
-                    uiContext.getViewNavigator().registerNavigableModel((Component) getInstanceManager().getPojoObject(), navigableModel);
+                    callbackMethod = method;
                     found = true;
                 }
             }
         }
 
         if (!"".equals(alias)) {
+            NavigableModel parent = uiContext.getViewNavigator().getNavigableModel(extension.value());
+            NavigableModel navigableModel = new NavigableModel(parent, alias, getInstanceManager().getPojoObject(), callbackMethod);
+            uiContext.getViewNavigator().registerNavigableModel((Component) getInstanceManager().getPojoObject(), navigableModel);
             configuration.put(EXTENSION_ALIAS, alias);
         }
     }
