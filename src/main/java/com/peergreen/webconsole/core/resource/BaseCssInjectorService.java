@@ -1,7 +1,7 @@
 package com.peergreen.webconsole.core.resource;
 
 import com.peergreen.webconsole.INotifierService;
-import com.peergreen.webconsole.resource.CssHandler;
+import com.peergreen.webconsole.resource.CssHandle;
 import com.peergreen.webconsole.resource.CssInjectorService;
 import com.vaadin.ui.UI;
 import org.apache.felix.ipojo.annotations.Bind;
@@ -32,16 +32,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Provides
 public class BaseCssInjectorService implements CssInjectorService {
 
-    private BundleTracker<List<CssHandler>> tracker;
+    private BundleTracker<List<CssHandle>> tracker;
     private List<UI> uis;
-    private List<CssHandler> styles;
+    private List<CssHandle> styles;
 
     public BaseCssInjectorService(BundleContext bundleContext,
                                   @Requires
                                   INotifierService notifierService) {
         uis = new CopyOnWriteArrayList<>();
         styles = new CopyOnWriteArrayList<>();
-        tracker = new BundleTracker<List<CssHandler>>(bundleContext, Bundle.ACTIVE, new BaseBundleTrackerCustomizer(this, notifierService));
+        tracker = new BundleTracker<List<CssHandle>>(bundleContext, Bundle.ACTIVE, new BaseBundleTrackerCustomizer(this, notifierService));
     }
 
     @Validate
@@ -55,20 +55,19 @@ public class BaseCssInjectorService implements CssInjectorService {
     }
 
     @Override
-    public CssHandler inject(String cssContent) {
-        CssHandler cssHandler = new BaseCssHandler(cssContent);
-        styles.add(cssHandler);
-        updateStyle(uis, Collections.singletonList(cssHandler));
-        return cssHandler;
+    public CssHandle inject(String cssContent) {
+        CssHandle cssHandle = new BaseCssHandle(cssContent, this);
+        styles.add(cssHandle);
+        updateStyle(uis, Collections.singletonList(cssHandle));
+        return cssHandle;
+    }
+
+    public void remove(CssHandle cssHandle) {
+        styles.remove(cssHandle);
     }
 
     @Override
-    public void remove(CssHandler cssHandler) {
-        styles.remove(cssHandler);
-    }
-
-    @Override
-    public CssHandler inject(InputStream is) throws IOException {
+    public CssHandle inject(InputStream is) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
         String line = bufferedReader.readLine();
@@ -90,10 +89,10 @@ public class BaseCssInjectorService implements CssInjectorService {
         uis.remove(ui);
     }
 
-    private void updateStyle(List<UI> uis, List<CssHandler> cssHandlers) {
+    private void updateStyle(List<UI> uis, List<CssHandle> cssHandles) {
         for (UI ui : uis) {
-            for (CssHandler cssHandler : cssHandlers) {
-                ui.getPage().getStyles().add(cssHandler.getCss());
+            for (CssHandle cssHandle : cssHandles) {
+                ui.getPage().getStyles().add(cssHandle.get());
             }
         }
     }
