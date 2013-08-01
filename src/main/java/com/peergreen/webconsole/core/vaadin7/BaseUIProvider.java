@@ -102,8 +102,7 @@ public class BaseUIProvider extends UIProvider {
             Dictionary<String, Object> props = new Hashtable<>();
             props.put("instance.object", ui);
             Dictionary<String, Object> bindFilters = new Hashtable<>();
-            bindFilters.put("ScopeView", "(&(" + UI_ID + "=" + uiId + ")(" +
-                    EXTENSION_POINT + "=" + SCOPE_EXTENSION_POINT + "))");
+            bindFilters.put("ScopeView", String.format("(&(%s=%s)(%s=%s))", UI_ID, uiId, EXTENSION_POINT, SCOPE_EXTENSION_POINT));
             props.put(REQUIRES_FILTER, bindFilters);
 
             // Create ipojo component from its factory
