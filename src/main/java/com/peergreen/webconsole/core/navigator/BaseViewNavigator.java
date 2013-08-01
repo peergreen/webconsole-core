@@ -115,7 +115,7 @@ public class BaseViewNavigator implements ViewNavigator {
     public String getLocation(String extension) {
         NavigableModel navigableModel = getNavigableModel(extension);
         if (navigableModel != null) {
-            return getNavigableModel(extension).getFullPath();
+            return navigableModel.getFullPath();
         }
         return null;
     }
@@ -126,7 +126,7 @@ public class BaseViewNavigator implements ViewNavigator {
             return root;
         }
         for (Map.Entry<Component, NavigableModel> navigableModel : navigableModels.entrySet()) {
-            if (extension.startsWith(navigableModel.getKey().getClass().getName())) {
+            if (extensionMatchClassName(extension, navigableModel.getKey().getClass().getName())) {
                 return navigableModel.getValue();
             }
         }
@@ -141,6 +141,10 @@ public class BaseViewNavigator implements ViewNavigator {
     @Override
     public void unregisterNavigableModel(Component component) {
         navigableModels.remove(component);
+    }
+
+    private boolean extensionMatchClassName(String extension, String className) {
+        return extension.matches(className + ".*");
     }
 
     public class NavigatorViewChangeListener implements ViewChangeListener {
