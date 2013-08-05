@@ -216,6 +216,7 @@ public class ExtensionHandler extends DependencyHandler {
         }
 
         List<String> specificationsList = new ArrayList<>();
+        specificationsList.add(extensionType.getName());
         for (Class<?> clazz : classes) {
             if (!Pojo.class.equals(clazz) && !Object.class.equals(clazz)) {
                 specificationsList.add(clazz.getName());
