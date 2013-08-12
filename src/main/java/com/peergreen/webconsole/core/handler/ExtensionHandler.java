@@ -315,6 +315,7 @@ public class ExtensionHandler extends DependencyHandler {
         for (Field field : fieldsToBind) {
             Element requires = new Element("requires", null);
             requires.addAttribute(new Attribute("field", field.getName()));
+            requires.addAttribute(new Attribute("filter", String.format("(|(%s=%s)(!(%s=*)))", UI_ID, uiContext.getUIId(), UI_ID)));
             newMetadata.addElement(requires);
         }
         return newMetadata;

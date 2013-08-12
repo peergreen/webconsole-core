@@ -86,8 +86,16 @@ public class NotifierService implements INotifierService, Serializable {
     }
 
     @Override
-    public void updateTask(Object worker, Long bytesReceived) {
-        getTask(worker).updateTask(bytesReceived);
+    public void updateTask(final Object worker, final Long bytesReceived) {
+        for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
+            UI ui = taskBar.getKey();
+            if (ui.isClosing()) {
+                clearComponentsForUI(ui);
+            } else {
+                getTask(worker).updateTask(bytesReceived);
+                ui.push();
+            }
+        }
     }
 
     @Override
@@ -220,10 +228,11 @@ public class NotifierService implements INotifierService, Serializable {
                     l.removeAllComponents();
                     int i = 0;
                     Iterator<Notification> iterator = notifications.descendingIterator();
-                    while (iterator.hasNext() || i < 50) {
+                    while (iterator.hasNext() && i < 50) {
                         Notification notification = iterator.next();
                         l.addComponent(new Label("<hr>", ContentMode.HTML));
                         Label message = new Label("<b>" + notification.getMessage() + "</b>", ContentMode.HTML);
+                        message.setWidth("280px");
                         l.addComponent(message);
                         Label date = new Label("<span>" + formatTime(System.currentTimeMillis() - notification.getDate()) +
                                 "</span>", ContentMode.HTML);
