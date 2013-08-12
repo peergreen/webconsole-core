@@ -5453,3 +5453,15 @@ body .dashboard.v-app-loading {
 .dashboard .edit-dashboard .v-formlayout .v-formlayout-captioncell {
 	vertical-align: middle;
 }
+
+.dashboard .confirm-dialog {
+    max-height : 700px;
+    min-height : 50px;
+    max-width : 700px;
+    min-width : 300px;
+    padding: 0px !important;
+}
+
+.dashboard .confirm-dialog-message {
+    padding : 10px;
+}
