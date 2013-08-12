@@ -44,6 +44,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -94,7 +95,9 @@ public class ExtensionHandler extends DependencyHandler {
         bindInjections();
 
         // Add instance state listener to (un)register component specifications as services
-        ownInstanceManager.addInstanceStateListener(new ExtensionInstanceStateListener(getSpecifications(), configuration));
+        List<String> specifications = getSpecifications(extensionType);
+        ownInstanceManager.addInstanceStateListener(
+                new ExtensionInstanceStateListener(specifications.toArray(new String[specifications.size()]), configuration));
 
         super.configure(createBindings(metadata), configuration);
     }
@@ -199,31 +202,18 @@ public class ExtensionHandler extends DependencyHandler {
         return fieldsToBind;
     }
 
-    protected String[] getSpecifications() {
-        Class<?>[] interfaces = extensionType.getInterfaces();
-        Class<?> superClass = extensionType.getSuperclass();
-        Class<?> superSuperClass = null;
-        int specificationsArrayLength = interfaces.length + 1;
-        if (Component.class.isAssignableFrom(superClass)) {
-            superSuperClass = Component.class;
-            specificationsArrayLength++;
-        }
-        Class<?>[] classes = new Class[specificationsArrayLength];
-        System.arraycopy(interfaces, 0, classes, 0, interfaces.length);
-        classes[interfaces.length] = superClass;
-        if (superSuperClass != null) {
-            classes[interfaces.length + 1] = superSuperClass;
-        }
-
-        List<String> specificationsList = new ArrayList<>();
-        specificationsList.add(extensionType.getName());
-        for (Class<?> clazz : classes) {
-            if (!Pojo.class.equals(clazz) && !Object.class.equals(clazz)) {
-                specificationsList.add(clazz.getName());
+    protected List<String> getSpecifications(Class<?> clazz) {
+        List<String> specifications = new ArrayList<>();
+        specifications.add(clazz.getName());
+        for (Class<?> itf : clazz.getInterfaces()) {
+            if (!Pojo.class.equals(itf)) {
+                specifications.add(itf.getName());
             }
         }
-
-        return specificationsList.toArray(new String[specificationsList.size()]);
+        if (clazz.getSuperclass() != null && !Object.class.equals(clazz.getSuperclass())) {
+            specifications.addAll(getSpecifications(clazz.getSuperclass()));
+        }
+        return specifications;
     }
 
     private boolean canBindExtensionFactory(Dictionary properties) {

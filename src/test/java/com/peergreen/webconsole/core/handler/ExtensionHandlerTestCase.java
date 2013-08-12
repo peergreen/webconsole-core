@@ -73,12 +73,11 @@ public class ExtensionHandlerTestCase {
         extensionHandler.setOwnInstanceManager(instanceManager);
         extensionHandler.setExtensionType();
 
-        List<String> specifications = Arrays.asList(extensionHandler.getSpecifications());
+        List<String> specifications = extensionHandler.getSpecifications(extensionPointProvider.getClass());
         Assert.assertTrue(specifications.contains(ExtensionPointProvider.class.getName()), "ExtensionPointProvider class missing");
         Assert.assertTrue(specifications.contains(Button.class.getName()), "Button class missing");
         Assert.assertTrue(specifications.contains(Component.class.getName()), "Component class missing");
         Assert.assertTrue(specifications.contains(TestInterface.class.getName()), "Test Interface class missing");
-        Assert.assertTrue(specifications.size() == 4, "There is only 4 specifications");
     }
 
     @Test
