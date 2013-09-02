@@ -255,8 +255,10 @@ public class BaseUI extends UI implements Serializable {
     @Bind(aggregate = true, optional = true)
     public void bindScopeView(Component scopeView, Dictionary props) {
         String scopeName = (String) props.get("scope.value");
+        Object iconClass = props.get("scope.iconClass");
+        String scopeIconClass = (iconClass == null || "".equals(iconClass)) ? "icon-" + scopeName : (String) props.get("scope.iconClass");
         String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
-        Scope scope = new Scope(scopeName, scopeAlias, scopeView);
+        Scope scope = new Scope(scopeName, scopeAlias, scopeIconClass, scopeView);
         scopes.put(scopeAlias, scope);
         viewNavigator.addRoute(scope);
         addScopeButtonInMenu(scope, progressIndicator.getValue() >= 1);
@@ -578,7 +580,8 @@ public class BaseUI extends UI implements Serializable {
                                 // notify.addStyleName("borderless");
                                 notify.addStyleName("notifications");
                                 notify.addStyleName("icon-only");
-                                notify.addStyleName("icon-bell");
+                                notify.addStyleName("icon-notification");
+                                notify.addStyleName("fontello");
 
                                 notify.addClickListener(new Button.ClickListener() {
                                     @Override
@@ -818,7 +821,7 @@ public class BaseUI extends UI implements Serializable {
         if (menu != null) {
             final Button b = new NativeButton(scope.getScopeName().toUpperCase());
 
-            b.addStyleName("icon-dashboard");
+            b.addStyleName(scope.getScopeIconClass());
 
             b.addClickListener(new Button.ClickListener() {
                 @Override

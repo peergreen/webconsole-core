@@ -13,13 +13,15 @@ import java.util.Map;
 public class Scope {
     private String scopeName;
     private String scopeAlias;
+    private String scopeIconClass;
     private Component scopeView;
     private Button scopeMenuButton;
     private Map<String, Method> navigatorCallbacks = new HashMap<>();
 
-    public Scope(String scopeName, String scopeAlias, Component scopeView) {
+    public Scope(String scopeName, String scopeAlias, String scopeIconClass, Component scopeView) {
         this.scopeName = scopeName;
         this.scopeAlias = scopeAlias;
+        this.scopeIconClass = scopeIconClass;
         this.scopeView = scopeView;
     }
 
@@ -29,6 +31,10 @@ public class Scope {
 
     public String getScopeAlias() {
         return scopeAlias;
+    }
+
+    public String getScopeIconClass() {
+        return scopeIconClass;
     }
 
     public void setScopeName(String scopeName) {

@@ -18,7 +18,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -165,6 +164,6 @@ public class ExtensionHandlerTestCase {
         Assert.assertEquals(properties.get("test.attr2"), "", "Wrong attr2 attribute in Qualifier annotation");
         Assert.assertEquals(properties.get("test.attr3"), "Really an awesome extension", "Wrong attr3 attribute in Qualifier annotation");
         Assert.assertEquals(properties.get("scope.value"), "testScopeAnnotationWithoutIconPath", "Wrong name attribute in Scope annotation");
-        Assert.assertEquals(properties.get("scope.iconPath"), "", "Wrong icon path attribute in Scope annotation");
+        Assert.assertEquals(properties.get("scope.iconClass"), "", "Wrong icon path attribute in Scope annotation");
     }
 }
