@@ -2,7 +2,7 @@ package com.peergreen.webconsole.core.handler;
 
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.Unlink;
-import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.core.notifier.InternalNotifierService;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 import org.apache.felix.ipojo.InstanceManager;
@@ -17,7 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 public class LinkDependencyCallback extends DependencyCallback {
 
     private UI ui;
-    private INotifierService notifierService;
+    private InternalNotifierService notifierService;
     private InstanceManager manager;
 
     /**
@@ -28,7 +28,7 @@ public class LinkDependencyCallback extends DependencyCallback {
      * @param methodType : is the method to call a bind method or an unbind
      *                   method
      */
-    public LinkDependencyCallback(Dependency dep, String method, int methodType, UI ui, INotifierService notifierService) {
+    public LinkDependencyCallback(Dependency dep, String method, int methodType, UI ui, InternalNotifierService notifierService) {
         super(dep, method, methodType);
         this.ui = ui;
         this.notifierService = notifierService;
@@ -101,7 +101,7 @@ public class LinkDependencyCallback extends DependencyCallback {
         return newObject[0];
     }
 
-    public void setNotifierService(INotifierService notifierService) {
+    public void setNotifierService(InternalNotifierService notifierService) {
         this.notifierService = notifierService;
     }
 

@@ -5,14 +5,14 @@ import com.peergreen.security.principal.RoleGroup;
 import com.peergreen.security.principal.RolePrincipal;
 import com.peergreen.security.principal.UserPrincipal;
 import com.peergreen.webconsole.Constants;
+import com.peergreen.webconsole.ISecurityManager;
+import com.peergreen.webconsole.core.context.BaseUIContext;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
 import com.peergreen.webconsole.core.extension.InstanceState;
-import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.core.navigator.BaseViewNavigator;
+import com.peergreen.webconsole.core.notifier.InternalNotifierService;
 import com.peergreen.webconsole.core.scope.Scope;
-import com.peergreen.webconsole.ISecurityManager;
-import com.peergreen.webconsole.core.context.BaseUIContext;
 import com.peergreen.webconsole.core.scope.ScopeFactory;
 import com.peergreen.webconsole.core.security.SecurityManager;
 import com.peergreen.webconsole.navigator.NavigableModel;
@@ -162,7 +162,7 @@ public class BaseUI extends UI implements Serializable {
      * Notifier service
      */
     @Requires
-    private INotifierService notifierService;
+    private InternalNotifierService notifierService;
 
     /**
      * Authentication service

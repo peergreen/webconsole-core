@@ -1,6 +1,5 @@
 package com.peergreen.webconsole.core.notifier;
 
-import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.NotificationOverlay;
 import com.peergreen.webconsole.core.notifier.utils.Notification;
 import com.peergreen.webconsole.core.notifier.utils.NotificationButton;
@@ -36,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @Provides
 @Instantiate
-public class NotifierService implements INotifierService, Serializable {
+public class NotifierService implements InternalNotifierService, Serializable {
 
     private static final long serialVersionUID = 1L;
 

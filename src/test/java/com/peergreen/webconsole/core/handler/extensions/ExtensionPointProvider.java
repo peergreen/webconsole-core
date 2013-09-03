@@ -19,16 +19,16 @@ import org.osgi.framework.BundleContext;
 public class ExtensionPointProvider extends Button implements TestInterface {
 
     @Inject
-    ISecurityManager securityManager;
+    private ISecurityManager securityManager;
 
     @Inject
-    BundleContext bundleContext;
+    private BundleContext bundleContext;
 
     @Inject
-    UIContext uiContext;
+    private UIContext uiContext;
 
     @Inject
-    INotifierService notifierService;
+    private INotifierService notifierService;
 
     public ISecurityManager getSecurityManager() {
         return securityManager;

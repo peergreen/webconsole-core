@@ -5,6 +5,7 @@ import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.Scope;
+import com.peergreen.webconsole.core.notifier.InternalNotifierService;
 import com.peergreen.webconsole.navigator.Navigable;
 import com.peergreen.webconsole.navigator.NavigationContext;
 import com.peergreen.webconsole.navigator.Navigate;
@@ -63,7 +64,7 @@ public class ExtensionHandler extends DependencyHandler {
     private Class<?> extensionType;
     private UIContext uiContext;
     private InstanceManager ownInstanceManager = new OwnInstanceManager();
-    private INotifierService notifierService;
+    private InternalNotifierService notifierService;
     private List<Field> fieldsToBind;
     private List<LinkDependencyCallback> dependencyCallbacks = new ArrayList<>();
     private List<String> notifications = new LinkedList<>();
@@ -433,7 +434,7 @@ public class ExtensionHandler extends DependencyHandler {
     }
 
     @Bind(optional = true)
-    public void bindNotifierService(INotifierService notifierService) {
+    public void bindNotifierService(InternalNotifierService notifierService) {
         this.notifierService = notifierService;
         for (LinkDependencyCallback dependencyCallback : dependencyCallbacks) {
             dependencyCallback.setNotifierService(notifierService);
