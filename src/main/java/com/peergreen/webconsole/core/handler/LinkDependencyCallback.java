@@ -71,7 +71,7 @@ public class LinkDependencyCallback extends DependencyCallback {
                             newObject[0] = m_methodObj.invoke(manager.getPojoObjects()[finalI], arg);
                             updateNotifier();
                         } catch (IllegalAccessException | InvocationTargetException e) {
-                            LOGGER.error(e.getMessage());
+                            LOGGER.error(e.getMessage(), e);
                         }
                     }
                 });
@@ -93,7 +93,7 @@ public class LinkDependencyCallback extends DependencyCallback {
                     newObject[0] = m_methodObj.invoke(instance, arg);
                     updateNotifier();
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e.getMessage(), e);
                 }
             }
         });

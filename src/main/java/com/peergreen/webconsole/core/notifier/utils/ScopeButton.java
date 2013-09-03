@@ -7,9 +7,9 @@ import com.vaadin.ui.UI;
  * @author Mohammed Boukada
  */
 public class ScopeButton {
-    Button button;
-    UI buttonUi;
-    int badge;
+    private Button button;
+    private UI buttonUi;
+    private int badge;
 
     public ScopeButton(Button button, UI buttonUi, int badge) {
         this.button = button;

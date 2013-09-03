@@ -39,8 +39,9 @@ public class Task {
     }
 
     public void updateTask(Long bytesReceived) {
-        for (ProgressIndicator progressIndicator : progressIndicators)
+        for (ProgressIndicator progressIndicator : progressIndicators) {
             progressIndicator.setValue((float) (bytesReceived / contentLength));
+        }
     }
 
     public void addProgressIndicator(ProgressIndicator progressIndicator) {

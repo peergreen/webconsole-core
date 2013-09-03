@@ -62,7 +62,7 @@ public class ExtensionTracker implements TrackerCustomizer {
             tracker = new Tracker(bundleContext, bundleContext.createFilter(filter), this);
             tracker.open();
         } catch (InvalidSyntaxException e) {
-            LOGGER.warn("Fail to create filter ''{0}''", filter);
+            LOGGER.warn("Fail to create filter ''{0}''", filter, e);
         }
     }
 
@@ -103,7 +103,7 @@ public class ExtensionTracker implements TrackerCustomizer {
             properties.put(Constants.EXTENSION_ROLES, roles);
             instances.put(reference, extensionFactory.createComponentInstance(properties));
         } catch (ClassNotFoundException | MissingHandlerException | ConfigurationException | UnacceptableConfiguration e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage(), e);
         }
     }
 

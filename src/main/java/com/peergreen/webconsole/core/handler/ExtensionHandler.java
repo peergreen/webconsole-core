@@ -29,7 +29,6 @@ import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Handler;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.architecture.ComponentTypeDescription;
-import org.apache.felix.ipojo.architecture.HandlerDescription;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 import org.apache.felix.ipojo.handlers.dependency.Dependency;
 import org.apache.felix.ipojo.handlers.dependency.DependencyCallback;
@@ -387,11 +386,6 @@ public class ExtensionHandler extends DependencyHandler {
         super.initializeComponentFactory(typeDesc, metadata);
         // Tag this component as extension
         typeDesc.addProperty(new PropertyDescription(WEBCONSOLE_EXTENSION, "java.lang.String", "true", true));
-    }
-
-    @Override
-    public HandlerDescription getDescription() {
-        return super.getDescription();
     }
 
     public class ExtensionInstanceStateListener implements InstanceStateListener {

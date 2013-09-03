@@ -145,7 +145,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     private Task getTask(Object worker) {
         for (Task task : tasks) {
-            if (worker.equals(task.getWorker())) return task;
+            if (worker.equals(task.getWorker())) {
+                return task;
+            }
         }
         return null;
     }
@@ -390,7 +392,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
      * @author Mohammed Boukada
      */
     private class NotificationClickListener implements Button.ClickListener {
-        boolean opened = false;
+        private boolean opened = false;
 
         private VerticalLayout layout;
 
@@ -447,7 +449,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
                     }
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // do nothing
             }
         }
     }

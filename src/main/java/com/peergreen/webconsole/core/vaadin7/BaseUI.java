@@ -58,6 +58,8 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
+import org.ow2.util.log.Log;
+import org.ow2.util.log.LogFactory;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.Cookie;
@@ -89,48 +91,43 @@ public class BaseUI extends UI implements Serializable {
     private static final String ANONYMOUS_USER = "Anonymous";
 
     /**
+     * Logger.
+     */
+    private static final Log LOGGER = LogFactory.getLog(BaseUI.class);
+
+    /**
      * Root layout
      */
-    CssLayout root = new CssLayout();
+    private CssLayout root = new CssLayout();
 
     /**
-     * Login layout
+     * Progress indicator layout
      */
-    VerticalLayout loginLayout;
-
-    /**
-     * Progress indicatorlayout
-     */
-    VerticalLayout progressIndicatorLayout;
+    private VerticalLayout progressIndicatorLayout;
 
     /**
      * Menu layout
      */
-    CssLayout menu;
+    private CssLayout menu;
 
     /**
      * Content layout
      */
-    CssLayout content = new CssLayout();
+    private CssLayout content = new CssLayout();
 
-    Window notifications;
+    private Window notifications;
 
     /**
      * Main content layout
      */
-    HorizontalLayout main;
+    private HorizontalLayout main;
 
     /**
      * Progress indicator
      */
-    ProgressIndicator progressIndicator = new ProgressIndicator(new Float(0.0));
+    private ProgressIndicator progressIndicator = new ProgressIndicator(new Float(0.0));
 
-    int nbScopesToBound = 0;
-
-    /**
-     * To navigate between scopesFactories views
-     */
-    private Navigator nav;
+    private int nbScopesToBound = 0;
 
     /**
      * Scopes bound
@@ -181,8 +178,7 @@ public class BaseUI extends UI implements Serializable {
         this.defaultRoles = defaultRoles;
 
         NavigableModel rootNavigableModel = new NavigableModel(null, "", null, null);
-        this.nav = new Navigator(this, content);
-        this.viewNavigator = new BaseViewNavigator(nav, rootNavigableModel);
+        this.viewNavigator = new BaseViewNavigator(new Navigator(this, content), rootNavigableModel);
     }
 
     @Validate
@@ -220,7 +216,7 @@ public class BaseUI extends UI implements Serializable {
                         if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
                         scopeFactory.setInstance(instance);
                     } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
-                        e.printStackTrace();
+                        LOGGER.error(e.getMessage(), e);
                         failed = true;
                     }
                     if (failed) {
@@ -329,7 +325,7 @@ public class BaseUI extends UI implements Serializable {
 
         addStyleName("login");
 
-        loginLayout = new VerticalLayout();
+        VerticalLayout loginLayout = new VerticalLayout();
         loginLayout.setId("webconsole_loginlayout_id");
         loginLayout.setSizeFull();
         loginLayout.addStyleName("login-layout");
@@ -504,7 +500,7 @@ public class BaseUI extends UI implements Serializable {
 
                         if (securityManager != null) {
                             // User menu
-                            addComponent(new VerticalLayout() {
+                            VerticalLayout menuView = new VerticalLayout() {
                                 {
                                     setSizeUndefined();
                                     addStyleName("user");
@@ -559,7 +555,8 @@ public class BaseUI extends UI implements Serializable {
                                         });
                                     }
                                 }
-                            });
+                            };
+                            addComponent(menuView);
                         }
                     }
                 });
@@ -641,12 +638,14 @@ public class BaseUI extends UI implements Serializable {
                     if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
                     scopeFactory.setInstance(instance);
                 } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e.getMessage(), e);
                     failed = true;
                 }
                 if (failed) {
                     String error = "Fail to add a scope for main UI. Please see logs";
-                    if (notifierService != null) notifierService.addNotification(error);
+                    if (notifierService != null) {
+                        notifierService.addNotification(error);
+                    }
                 }
             }
         }
@@ -671,28 +670,6 @@ public class BaseUI extends UI implements Serializable {
         } else {
             viewNavigator.navigateTo(f);
         }
-
-//        nav.addViewChangeListener(new ViewChangeListener() {
-//
-//            @Override
-//            public boolean beforeViewChange(ViewChangeEvent event) {
-//                notifierService.closeAll();
-//                for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
-//                    scopeEntry.getValue().getScopeMenuButton().removeStyleName("selected");
-//                }
-//                if (event.getParameters() != null && !"".equals(event.getParameters())) {
-//                    viewNavigator.navigate(event.getViewName() + "/" + event.getParameters());
-//                }
-//                return true;
-//            }
-//
-//            @Override
-//            public void afterViewChange(ViewChangeEvent event) {
-//                String alias = event.getViewName();
-//                if ("".equals(alias) || "/".equals(alias)) alias = "/home";
-//                scopes.get(alias).getScopeMenuButton().addStyleName("selected");
-//            }
-//        });
     }
 
     private void buildProgressIndicatorView() {
@@ -774,43 +751,6 @@ public class BaseUI extends UI implements Serializable {
         sb.append("</span></center>");
         return sb.toString();
     }
-
-//    /**
-//     * Add route for scope view to navigator
-//     * @param scope
-//     */
-//    private void addRouteToNav(Scope scope) {
-//        if (nav != null) {
-//            nav.removeView(scope.getScopeAlias());
-//
-//            View view;
-//            try {
-//                view = new NavigatorView(scope.getScopeView());
-//            } catch (Exception e) {
-//                view = new NavigatorView(new ExceptionView(e));
-//            }
-//            nav.addView(scope.getScopeAlias(), view);
-//
-//            if ("home".equals(scope.getScopeName().toLowerCase())) {
-//                nav.addView("", view);
-//                nav.addView("/", view);
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Remove route for scope view from navigator
-//     * @param scope
-//     */
-//    private void removeRouteFromNav(Scope scope) {
-//        if (nav != null) {
-//            nav.removeView(scope.getScopeAlias());
-//            if ("home".equals(scope.getScopeName())) {
-//                nav.removeView("");
-//                nav.removeView("/");
-//            }
-//        }
-//    }
 
     /**
      * Add scope button in menu
