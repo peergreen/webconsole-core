@@ -13,6 +13,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.osgi.framework.BundleContext;
 
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Map;
 import java.util.Properties;
@@ -57,6 +58,9 @@ public class BaseUIProviderFactory implements UIProviderFactory {
         String consoleAlias = (String) properties.get(Constants.CONSOLE_ALIAS);
         Boolean enableSecurity = (Boolean) properties.get(Constants.ENABLE_SECURITY);
         String[] defaultRoles = (String[]) properties.get(Constants.DEFAULT_ROLES);
+        if (defaultRoles == null) {
+            defaultRoles = new String[0];
+        }
 
         try {
             // Create an instance of base console UI provider
@@ -64,7 +68,7 @@ public class BaseUIProviderFactory implements UIProviderFactory {
             provider.setConsoleName(consoleName);
             provider.setConsoleAlias(consoleAlias);
             provider.setEnableSecurity(enableSecurity);
-            provider.setDefaultRoles(defaultRoles);
+            provider.setDefaultRoles(Arrays.asList(defaultRoles));
 
             // Configuration properties for ipojo component
             Properties props = new Properties();
@@ -74,12 +78,8 @@ public class BaseUIProviderFactory implements UIProviderFactory {
             // Create ipojo component from its factory
             String instanceName = (String) properties.get("instance.name");
             providers.put(instanceName, factory.createComponentInstance(props));
-        } catch (UnacceptableConfiguration unacceptableConfiguration) {
+        } catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException unacceptableConfiguration) {
             unacceptableConfiguration.printStackTrace();
-        } catch (MissingHandlerException e) {
-            e.printStackTrace();
-        } catch (ConfigurationException e) {
-            e.printStackTrace();
         }
         return provider;
     }

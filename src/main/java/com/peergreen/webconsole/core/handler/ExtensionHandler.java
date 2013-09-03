@@ -1,23 +1,23 @@
 package com.peergreen.webconsole.core.handler;
 
 import com.peergreen.webconsole.ExtensionPoint;
+import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
-import com.peergreen.webconsole.Scope;
-import com.peergreen.webconsole.core.notifier.InternalNotifierService;
-import com.peergreen.webconsole.navigator.Navigable;
-import com.peergreen.webconsole.navigator.NavigationContext;
-import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.Qualifier;
+import com.peergreen.webconsole.Scope;
 import com.peergreen.webconsole.UIContext;
 import com.peergreen.webconsole.Unlink;
-import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandler;
 import com.peergreen.webconsole.core.extension.InstanceState;
-import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.core.notifier.InternalNotifierService;
+import com.peergreen.webconsole.navigator.Navigable;
 import com.peergreen.webconsole.navigator.NavigableModel;
+import com.peergreen.webconsole.navigator.Navigate;
+import com.peergreen.webconsole.navigator.NavigationContext;
+import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.vaadin.ui.Component;
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -39,19 +39,27 @@ import org.apache.felix.ipojo.metadata.Element;
 import org.apache.felix.ipojo.util.SecurityHelper;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.ow2.util.log.Log;
+import org.ow2.util.log.LogFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.peergreen.webconsole.Constants.*;
+import static com.peergreen.webconsole.Constants.EXTENSION_ALIAS;
+import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
+import static com.peergreen.webconsole.Constants.EXTENSION_ROLES;
+import static com.peergreen.webconsole.Constants.UI_CONTEXT;
+import static com.peergreen.webconsole.Constants.UI_ID;
+import static com.peergreen.webconsole.Constants.WEBCONSOLE_EXTENSION;
 import static java.lang.String.format;
 
 /**
@@ -60,6 +68,11 @@ import static java.lang.String.format;
 @Handler(name = "extension",
          namespace = "com.peergreen.webconsole")
 public class ExtensionHandler extends DependencyHandler {
+
+    /**
+     * Logger.
+     */
+    private static final Log LOGGER = LogFactory.getLog(ExtensionHandler.class);
 
     private Class<?> extensionType;
     private UIContext uiContext;
@@ -95,9 +108,7 @@ public class ExtensionHandler extends DependencyHandler {
         bindInjections();
 
         // Add instance state listener to (un)register component specifications as services
-        List<String> specifications = getSpecifications(extensionType);
-        ownInstanceManager.addInstanceStateListener(
-                new ExtensionInstanceStateListener(specifications.toArray(new String[specifications.size()]), configuration));
+        ownInstanceManager.addInstanceStateListener(new ExtensionInstanceStateListener(configuration));
 
         super.configure(createBindings(metadata), configuration);
     }
@@ -115,11 +126,6 @@ public class ExtensionHandler extends DependencyHandler {
         uiContext.getViewNavigator().unregisterNavigableModel((Component) getInstanceManager().getPojoObject());
     }
 
-    @Override
-    public void start() {
-        super.start();
-    }
-
     @Bind(aggregate = true, optional = true)
     public void bindExtensionFactory(ExtensionFactory extensionFactory, Dictionary properties) {
         if (canBindExtensionFactory(properties)) {
@@ -127,16 +133,21 @@ public class ExtensionHandler extends DependencyHandler {
             boolean failed = false;
             try {
                 instanceHandler = extensionFactory.create(uiContext);
-                if (InstanceState.STOPPED.equals(instanceHandler.getState())) failed = true;
+                if (InstanceState.STOPPED.equals(instanceHandler.getState())) {
+                    failed = true;
+                }
                 extensionFactories.put(extensionFactory, instanceHandler);
             } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
-                e.printStackTrace();
                 failed = true;
             }
+
             if (failed) {
                 String error = "Fail to add an extension to '" + properties.get("extension.point") +"'";
-                if(notifierService != null) notifierService.addNotification(error);
-                else notifications.add(error);
+                if (notifierService != null) {
+                    notifierService.addNotification(error);
+                } else {
+                    notifications.add(error);
+                }
             }
         }
     }
@@ -160,7 +171,7 @@ public class ExtensionHandler extends DependencyHandler {
                     try {
                         value = method.invoke(annotation);
                     } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new ConfigurationException(e.getMessage());
+                        throw new ConfigurationException(e.getMessage(), e);
                     }
                     configuration.put(propertiesPrefix + "." + method.getName(), method.getReturnType().cast(value));
                 }
@@ -195,7 +206,7 @@ public class ExtensionHandler extends DependencyHandler {
                         fieldsToBind.add(field);
                     }
                 } catch (IllegalAccessException e) {
-                    throw new ConfigurationException(format("Fail to set the field '%s' type of '%s'", field.getName(), field.getType().getName()));
+                    throw new ConfigurationException(format("Fail to set the field '%s' type of '%s'", field.getName(), field.getType().getName()), e);
                 }
             }
         }
@@ -257,7 +268,7 @@ public class ExtensionHandler extends DependencyHandler {
                     if (bindings.get(extensionPointId).getBindMethod() == null) {
                         bindings.get(extensionPointId).setBindMethod(method);
                     } else {
-                        throw new ConfigurationException("Bind method already defined");
+                        LOGGER.error("Bind method already defined for ''{0}''", extensionPointId);
                     }
                 } else {
                     bindings.put(extensionPointId, new ExtensionPointModel(method, null, filter));
@@ -275,13 +286,12 @@ public class ExtensionHandler extends DependencyHandler {
                     if (bindings.get(extensionPointId).getUnbindMethod() == null) {
                         bindings.get(extensionPointId).setUnbindMethod(method);
                     } else {
-                        throw new ConfigurationException("Unbind method already defined");
+                        LOGGER.error("Unbind method already defined for ''{0}''", extensionPointId);
                     }
                 } else {
                     bindings.put(extensionPointId, new ExtensionPointModel(null, method, filter));
                 }
             }
-
         }
 
         for (Map.Entry<String, ExtensionPointModel> binding : bindings.entrySet()) {
@@ -345,18 +355,18 @@ public class ExtensionHandler extends DependencyHandler {
             for (Method method : extensionType.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(Navigate.class)) {
                     if (found) {
-                        throw new ConfigurationException("Webconsole extension should have a unique method annotated with " +
-                                "com.peergreen.webconsole.navigator.@Navigate");
+                        LOGGER.error("Webconsole extension should have a unique method annotated with ''{0}''", Navigate.class.getName());
+                        continue;
                     }
 
                     // default alias is class name
                     Class<?>[] parameterTypes = method.getParameterTypes();
                     if (parameterTypes.length != 1){
-                        throw new ConfigurationException("Method annotated with @Navigate should have one parameter");
-                    }
-                    else if (parameterTypes[0] != NavigationContext.class) {
-                        throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of " +
-                                "'com.peergreen.webconsole.navigator.NavigationContext'");
+                        LOGGER.error("Method annotated with @Navigate should have one parameter");
+                        continue;
+                    } else if (parameterTypes[0] != NavigationContext.class) {
+                        LOGGER.error("The parameter for the method annotated with @Navigate should be instance of ''{0}''", NavigationContext.class.getName());
+                        continue;
                     }
                     callbackMethod = method;
                     found = true;
@@ -386,12 +396,13 @@ public class ExtensionHandler extends DependencyHandler {
 
     public class ExtensionInstanceStateListener implements InstanceStateListener {
 
-        String[] specifications;
-        Dictionary configuration;
-        ServiceRegistration serviceRegistration;
+        private String[] specifications;
+        private Dictionary<String, ?> configuration;
+        private ServiceRegistration serviceRegistration;
 
-        public ExtensionInstanceStateListener(String[] specifications, Dictionary configuration) {
-            this.specifications = specifications;
+        public ExtensionInstanceStateListener(Dictionary<String, ?> configuration) {
+            List<String> listSpecifications = getSpecifications(extensionType);
+            this.specifications = listSpecifications.toArray(new String[listSpecifications.size()]);
             this.configuration = configuration;
         }
 
@@ -400,11 +411,10 @@ public class ExtensionHandler extends DependencyHandler {
             BundleContext bc = ownInstanceManager.getBundleContext();
 
             if (!SecurityHelper.hasPermissionToRegisterServices(specifications, bc)) {
-                throw new SecurityException("The bundle "
-                        + bc.getBundle().getBundleId()
-                        + " does not have the"
-                        + " permission to register the services "
-                        + specifications);
+                throw new SecurityException(
+                        format("The bundle %d does not have the permission to register the services %s",
+                                bc.getBundle().getBundleId(),
+                                Arrays.asList(specifications)));
             } else {
                 switch (newState) {
                     case ComponentInstance.VALID :

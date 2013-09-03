@@ -143,7 +143,7 @@ public class BaseUI extends UI implements Serializable {
       */
     private String consoleName;
     private Boolean enableSecurity;
-    private String[] defaultRoles;
+    private List<String> defaultRoles;
 
     private String scopeExtensionPoint;
 
@@ -173,7 +173,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Base console UI constructor
      */
-    public BaseUI(String consoleName, String extensionPoint, String uiId, Boolean enableSecurity, String[] defaultRoles) {
+    public BaseUI(String consoleName, String extensionPoint, String uiId, Boolean enableSecurity, List<String> defaultRoles) {
         this.consoleName = consoleName;
         this.scopeExtensionPoint = extensionPoint;
         this.uiId = uiId;

@@ -8,6 +8,8 @@ import com.vaadin.ui.UI;
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.handlers.dependency.Dependency;
 import org.apache.felix.ipojo.handlers.dependency.DependencyCallback;
+import org.ow2.util.log.Log;
+import org.ow2.util.log.LogFactory;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -15,7 +17,10 @@ import java.lang.reflect.InvocationTargetException;
  * @author Mohammed Boukada
  */
 public class LinkDependencyCallback extends DependencyCallback {
-
+    /**
+     * Logger.
+     */
+    private static final Log LOGGER = LogFactory.getLog(LinkDependencyCallback.class);
     private UI ui;
     private InternalNotifierService notifierService;
     private InstanceManager manager;
@@ -51,10 +56,8 @@ public class LinkDependencyCallback extends DependencyCallback {
                     try {
                         newObject[0] =  m_methodObj.invoke(manager.getPojoObject(), arg);
                         updateNotifier();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        LOGGER.error(e.getMessage());
                     }
                 }
             });
@@ -67,10 +70,8 @@ public class LinkDependencyCallback extends DependencyCallback {
                         try {
                             newObject[0] = m_methodObj.invoke(manager.getPojoObjects()[finalI], arg);
                             updateNotifier();
-                        } catch (IllegalAccessException e) {
-                            e.printStackTrace();
-                        } catch (InvocationTargetException e) {
-                            e.printStackTrace();
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            LOGGER.error(e.getMessage());
                         }
                     }
                 });
@@ -91,9 +92,7 @@ public class LinkDependencyCallback extends DependencyCallback {
                 try {
                     newObject[0] = m_methodObj.invoke(instance, arg);
                     updateNotifier();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
+                } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
             }

@@ -205,42 +205,14 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     @Override
     public void addNotificationsButton(Button button, final Window window, final UI ui) {
-        final VerticalLayout l = new VerticalLayout();
-        l.setMargin(true);
-        l.setSpacing(true);
-        window.setContent(l);
+        final VerticalLayout layout = new VerticalLayout();
+        layout.setMargin(true);
+        layout.setSpacing(true);
+        window.setContent(layout);
 
-        notificationButtons.put(ui, new NotificationButton(button, window, l, 0));
+        notificationButtons.put(ui, new NotificationButton(button, 0));
 
-        button.addClickListener(new Button.ClickListener() {
-            boolean opened = false;
-
-            @Override
-            public void buttonClick(Button.ClickEvent event) {
-                for (Map.Entry<UI, NotificationButton> notificationButtonEntry : notificationButtons.entrySet()) {
-                    notificationButtonEntry.getValue().setBadge(0);
-                }
-                if (opened) {
-                    opened = false;
-                } else {
-                    opened = true;
-                    l.removeAllComponents();
-                    int i = 0;
-                    Iterator<Notification> iterator = notifications.descendingIterator();
-                    while (iterator.hasNext() && i < 50) {
-                        Notification notification = iterator.next();
-                        l.addComponent(new Label("<hr>", ContentMode.HTML));
-                        Label message = new Label("<b>" + notification.getMessage() + "</b>", ContentMode.HTML);
-                        message.setWidth("280px");
-                        l.addComponent(message);
-                        Label date = new Label("<span>" + formatTime(System.currentTimeMillis() - notification.getDate()) +
-                                "</span>", ContentMode.HTML);
-                        l.addComponent(date);
-                        i++;
-                    }
-                }
-            }
-        });
+        button.addClickListener(new NotificationClickListener(layout));
     }
 
     @Override
@@ -364,25 +336,45 @@ public class NotifierService implements InternalNotifierService, Serializable {
         StringBuilder date = new StringBuilder();
         if (years > 0) {
             date.append(years);
-            if (years == 1) date.append(" year"); else date.append(" years");
+            if (years == 1) {
+                date.append(" year");
+            } else {
+                date.append(" years");
+            }
         } else {
             if (months > 0) {
                 date.append(months);
-                if (months == 1) date.append(" month"); else date.append(" months");
+                if (months == 1) {
+                    date.append(" month");
+                } else {
+                    date.append(" months");
+                }
             } else {
                 if (days > 0) {
                     date.append(days);
-                    if (days == 1) date.append(" day"); else date.append(" days");
+                    if (days == 1) {
+                        date.append(" day");
+                    } else {
+                        date.append(" days");
+                    }
                 } else {
                     Long hours = TimeUnit.MILLISECONDS.toHours(t - days * 24 * 60 * 60 * 1000);
                     if (hours > 0) {
                         date.append(hours);
-                        if (hours == 1) date.append(" hour"); else date.append(" hours");
+                        if (hours == 1) {
+                            date.append(" hour");
+                        } else {
+                            date.append(" hours");
+                        }
                     } else {
                         Long minutes = TimeUnit.MILLISECONDS.toMinutes(t - hours * 60 * 60 * 1000);
                         if (minutes > 0) {
                             date.append(minutes);
-                            if (minutes == 1) date.append(" minute"); else date.append(" minutes");
+                            if (minutes == 1) {
+                                date.append(" minute");
+                            } else {
+                                date.append(" minutes");
+                            }
                         } else {
                             date.append("a few seconds");
                         }
@@ -394,6 +386,48 @@ public class NotifierService implements InternalNotifierService, Serializable {
         return date.toString();
     }
 
+    /**
+     * @author Mohammed Boukada
+     */
+    private class NotificationClickListener implements Button.ClickListener {
+        boolean opened = false;
+
+        private VerticalLayout layout;
+
+        public NotificationClickListener(VerticalLayout layout) {
+            this.layout = layout;
+        }
+
+        @Override
+        public void buttonClick(Button.ClickEvent event) {
+            for (Map.Entry<UI, NotificationButton> notificationButtonEntry : notificationButtons.entrySet()) {
+                notificationButtonEntry.getValue().setBadge(0);
+            }
+            if (opened) {
+                opened = false;
+            } else {
+                opened = true;
+                layout.removeAllComponents();
+                int i = 0;
+                Iterator<Notification> iterator = notifications.descendingIterator();
+                while (iterator.hasNext() && i < 50) {
+                    Notification notification = iterator.next();
+                    layout.addComponent(new Label("<hr>", ContentMode.HTML));
+                    Label message = new Label("<b>" + notification.getMessage() + "</b>", ContentMode.HTML);
+                    message.setWidth("280px");
+                    layout.addComponent(message);
+                    Label date = new Label("<span>" + formatTime(System.currentTimeMillis() - notification.getDate()) +
+                            "</span>", ContentMode.HTML);
+                    layout.addComponent(date);
+                    i++;
+                }
+            }
+        }
+    }
+
+    /**
+     * @author Mohammed Boukada
+     */
     private class CleanupThread extends Thread {
         @Override
         public void run() {

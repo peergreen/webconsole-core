@@ -35,7 +35,7 @@ public class BaseUIProvider extends UIProvider {
     private String consoleName;
     private String consoleAlias;
     private Boolean enableSecurity;
-    private String[] defaultRoles;
+    private List<String> defaultRoles;
 
     List<ComponentInstance> uis = new ArrayList<>();
 
@@ -76,7 +76,7 @@ public class BaseUIProvider extends UIProvider {
         this.enableSecurity = enableSecurity;
     }
 
-    public void setDefaultRoles(String[] defaultRoles) {
+    public void setDefaultRoles(List<String> defaultRoles) {
         this.defaultRoles = defaultRoles;
     }
 
