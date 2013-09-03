@@ -6,7 +6,7 @@ import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.Scope;
 import com.peergreen.webconsole.navigator.Navigable;
-import com.peergreen.webconsole.navigator.NavigableContext;
+import com.peergreen.webconsole.navigator.NavigationContext;
 import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.Qualifier;
 import com.peergreen.webconsole.UIContext;
@@ -44,7 +44,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -345,7 +344,8 @@ public class ExtensionHandler extends DependencyHandler {
             for (Method method : extensionType.getDeclaredMethods()) {
                 if (method.isAnnotationPresent(Navigate.class)) {
                     if (found) {
-                        throw new ConfigurationException("Webconsole extension should have a unique method annotated with @Navigate");
+                        throw new ConfigurationException("Webconsole extension should have a unique method annotated with " +
+                                "com.peergreen.webconsole.navigator.@Navigate");
                     }
 
                     // default alias is class name
@@ -353,8 +353,9 @@ public class ExtensionHandler extends DependencyHandler {
                     if (parameterTypes.length != 1){
                         throw new ConfigurationException("Method annotated with @Navigate should have one parameter");
                     }
-                    else if (parameterTypes[0] != NavigableContext.class) {
-                        throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of 'NavigableContext'");
+                    else if (parameterTypes[0] != NavigationContext.class) {
+                        throw new ConfigurationException("The parameter for the method annotated with @Navigate should be instance of " +
+                                "'com.peergreen.webconsole.navigator.NavigationContext'");
                     }
                     callbackMethod = method;
                     found = true;

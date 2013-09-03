@@ -1,6 +1,6 @@
 package com.peergreen.webconsole.core.navigator;
 
-import com.peergreen.webconsole.navigator.NavigableContext;
+import com.peergreen.webconsole.navigator.NavigationContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,17 +8,17 @@ import java.util.Map;
 /**
  * @author Mohammed Boukada
  */
-public class BaseNavigableContext implements NavigableContext {
+public class BaseNavigationContext implements NavigationContext {
 
     private String path;
     private Map<String, Object> properties;
 
-    public BaseNavigableContext(String path) {
+    public BaseNavigationContext(String path) {
         this.path = path;
         this.properties = new HashMap<>();
     }
 
-    public BaseNavigableContext(String path, Map<String, Object> properties) {
+    public BaseNavigationContext(String path, Map<String, Object> properties) {
         this.path = path;
         this.properties = properties;
     }

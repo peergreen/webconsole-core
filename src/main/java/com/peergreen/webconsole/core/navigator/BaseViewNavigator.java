@@ -5,8 +5,8 @@ import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.core.exception.ExceptionView;
 import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;
-import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.peergreen.webconsole.navigator.NavigableModel;
+import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.peergreen.webconsole.utils.UrlFragment;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Vaadin view navigator implementation
  * @author Mohammed Boukada
  */
 public class BaseViewNavigator implements ViewNavigator {
@@ -30,12 +31,20 @@ public class BaseViewNavigator implements ViewNavigator {
     private Map<Component, NavigableModel> navigableModels = new ConcurrentHashMap<>();
     private Map<String, Scope> scopes = new ConcurrentHashMap<>();
 
+    /**
+     * Create new view navigator
+     * @param nav Vaadin navigator
+     * @param rootNavigableModel root (UI) navigable model
+     */
     public BaseViewNavigator(Navigator nav, NavigableModel rootNavigableModel) {
         this.nav = nav;
         this.root = rootNavigableModel;
         configure();
     }
 
+    /**
+     * Configure navigator
+     */
     private void configure() {
         this.nav.addView("", new NavigatorView(new CssLayout()));
         this.nav.addView("/", new NavigatorView(new CssLayout()));
@@ -46,11 +55,20 @@ public class BaseViewNavigator implements ViewNavigator {
         this.notifierService = notifierService;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void navigateTo(String path) {
         nav.navigateTo(path);
     }
 
+    /**
+     * Navigate to the given path by calling all callback methods annotated by
+     * {@link com.peergreen.webconsole.navigator.Navigate} of each {@link com.peergreen.webconsole.navigator.NavigableModel}
+     * through the path.
+     * @param path path to extension
+     */
     public void navigate(String path) {
         String localPath = UrlFragment.getFirstFragment(path);
 
@@ -65,19 +83,19 @@ public class BaseViewNavigator implements ViewNavigator {
             notifierService.addNotification(String.format("Cannot navigate to '%s'", path));
         }
         else {
-            BaseNavigableContext context = new BaseNavigableContext(UrlFragment.subFirstFragment(path));
+            BaseNavigationContext context = new BaseNavigationContext(UrlFragment.subFirstFragment(path));
             try {
                 Method callbackMethod = navigableModel.getCallbackMethod();
                 Component nextComponent = null;
                 if (callbackMethod != null) {
-                    nextComponent = (Component) callbackMethod.invoke(navigableModel.getObject(), context);
+                    nextComponent = (Component) callbackMethod.invoke(navigableModel.getExtension(), context);
                 }
                 while (nextComponent != null
                         && navigableModels.containsKey(nextComponent)
                         && navigableModels.get(nextComponent).getCallbackMethod() != null
                         && !"".equals(context.getPath())) {
                     NavigableModel model = navigableModels.get(nextComponent);
-                    nextComponent = (Component) model.getCallbackMethod().invoke(model.getObject(), context);
+                    nextComponent = (Component) model.getCallbackMethod().invoke(model.getExtension(), context);
                 }
             } catch (InvocationTargetException | IllegalAccessException e) {
                 notifierService.addNotification(String.format("Cannot navigate to '%s'", path));
@@ -85,6 +103,10 @@ public class BaseViewNavigator implements ViewNavigator {
         }
     }
 
+    /**
+     * Add scope alias to navigator
+     * @param scope given scope
+     */
     public void addRoute(Scope scope) {
         scopes.put(scope.getScopeAlias(), scope);
         nav.removeView(scope.getScopeAlias());
@@ -102,6 +124,10 @@ public class BaseViewNavigator implements ViewNavigator {
         }
     }
 
+    /**
+     * Remove scope alias from navigator
+     * @param scope given scope
+     */
     public void removeRoute(Scope scope) {
         nav.removeView(scope.getScopeAlias());
         if ("home".equals(scope.getScopeName().toLowerCase())) {
@@ -111,6 +137,9 @@ public class BaseViewNavigator implements ViewNavigator {
         scopes.remove(scope.getScopeAlias());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getLocation(String extension) {
         NavigableModel navigableModel = getNavigableModel(extension);
@@ -120,6 +149,9 @@ public class BaseViewNavigator implements ViewNavigator {
         return null;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public NavigableModel getNavigableModel(String extension) {
         if (Constants.SCOPE_EXTENSION_POINT.equals(extension)) {
@@ -133,21 +165,46 @@ public class BaseViewNavigator implements ViewNavigator {
         return null;
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void registerNavigableModel(Component component, NavigableModel navigableModel) {
         navigableModels.put(component, navigableModel);
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     public void unregisterNavigableModel(Component component) {
         navigableModels.remove(component);
     }
 
+    /**
+     * Test event given extension id matches extension className.
+     * @param extension extension id. <br/>
+     *                  This parameter could be the extension class name or one of its own extension point.
+     * @param className className
+     * @return True if extension matches className, else returns False.
+     */
     private boolean extensionMatchClassName(String extension, String className) {
         return extension.matches(className + ".*");
     }
 
+    /**
+     * View change listener.
+     * @author Mohammed Boukada
+     */
     public class NavigatorViewChangeListener implements ViewChangeListener {
+
+        /**
+         * {@inheritDoc} <br />
+         *
+         * Navigate to the next view.
+         * Remove style from the previous.
+         * Update context.
+         */
         @Override
         public boolean beforeViewChange(ViewChangeEvent event) {
             notifierService.closeAll();
@@ -160,6 +217,11 @@ public class BaseViewNavigator implements ViewNavigator {
             return true;
         }
 
+        /**
+         * {@inheritDoc} <br />
+         *
+         * Update style for the selected view
+         */
         @Override
         public void afterViewChange(ViewChangeEvent event) {
             if (event.getViewName().equals(UrlFragment.getFirstFragment(event.getNavigator().getState()))) {

@@ -5460,7 +5460,7 @@ body .dashboard.v-app-loading {
 	vertical-align: middle;
 }
 
-.dashboard .confirm-dialog {
+.dashboard .default-window {
     max-height : 700px;
     min-height : 50px;
     max-width : 700px;
@@ -5468,6 +5468,6 @@ body .dashboard.v-app-loading {
     padding: 0px !important;
 }
 
-.dashboard .confirm-dialog-message {
+.dashboard .default-window-content {
     padding : 10px;
 }

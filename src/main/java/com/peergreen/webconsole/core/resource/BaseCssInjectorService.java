@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
+ * Css contribution service implementation
  * @author Mohammed Boukada
  */
 @Component
@@ -54,6 +55,9 @@ public class BaseCssInjectorService implements CssInjectorService {
         tracker.close();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CssHandle inject(String cssContent) {
         CssHandle cssHandle = new BaseCssHandle(cssContent, this);
@@ -66,6 +70,9 @@ public class BaseCssInjectorService implements CssInjectorService {
         styles.remove(cssHandle);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public CssHandle inject(InputStream is) throws IOException {
         StringBuilder sb = new StringBuilder();
@@ -89,6 +96,11 @@ public class BaseCssInjectorService implements CssInjectorService {
         uis.remove(ui);
     }
 
+    /**
+     * Update style for UIs
+     * @param uis list of UIs
+     * @param cssHandles list of css contributions
+     */
     private void updateStyle(List<UI> uis, List<CssHandle> cssHandles) {
         for (UI ui : uis) {
             for (CssHandle cssHandle : cssHandles) {

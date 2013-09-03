@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
+ * Bundle tracker for css contribution
  * @author Mohammed Boukada
  */
 public class BaseBundleTrackerCustomizer implements BundleTrackerCustomizer<List<CssHandle>> {
@@ -26,6 +27,11 @@ public class BaseBundleTrackerCustomizer implements BundleTrackerCustomizer<List
         this.notifierService = notifierService;
     }
 
+    /**
+     * {@inheritDoc} <br />
+     *
+     * If bundle contains css/ folder, adds all *.css file as a css contribution
+     */
     @Override
     public List<CssHandle> addingBundle(Bundle bundle, BundleEvent bundleEvent) {
         BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
@@ -48,6 +54,11 @@ public class BaseBundleTrackerCustomizer implements BundleTrackerCustomizer<List
         // do nothing
     }
 
+    /**
+     * {@inheritDoc} <br />
+     *
+     * Remove css contribution when bundle is stopping.
+     */
     @Override
     public void removedBundle(Bundle bundle, BundleEvent bundleEvent, List<CssHandle> cssHandles) {
         for (CssHandle cssHandle : cssHandles) {
