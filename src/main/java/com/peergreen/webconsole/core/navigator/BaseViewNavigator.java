@@ -229,7 +229,9 @@ public class BaseViewNavigator implements ViewNavigator {
                 if ("".equals(alias) || "/".equals(alias)) {
                     alias = "/home";
                 }
-                scopes.get(alias).getScopeMenuButton().addStyleName("selected");
+                if (scopes.containsKey(alias)) {
+                    scopes.get(alias).getScopeMenuButton().addStyleName("selected");
+                }
             }
         }
     }
