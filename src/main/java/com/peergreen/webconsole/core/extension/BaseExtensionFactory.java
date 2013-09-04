@@ -15,6 +15,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 /**
+ * Extension factory. <br />
+ * This factory creates an instance of given extension for each client (UI)
  * @author Mohammed Boukada
  */
 @Component
@@ -31,33 +33,49 @@ public class BaseExtensionFactory implements ExtensionFactory {
         this.factory = factory;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public InstanceHandler create(UIContext context) throws MissingHandlerException, UnacceptableConfiguration, ConfigurationException {
+    public InstanceHandle create(UIContext context) throws MissingHandlerException, UnacceptableConfiguration, ConfigurationException {
         Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(Constants.EXTENSION_POINT, extensionPoint);
         properties.put(Constants.UI_CONTEXT, context);
-        return new BaseInstanceHandler(factory.createComponentInstance(properties));
+        return new BaseInstanceHandle(factory.createComponentInstance(properties));
     }
 
-    public class BaseInstanceHandler implements InstanceHandler {
+    /**
+     * {@inheritDoc}
+     * @author Mohamme Boukada
+     */
+    public class BaseInstanceHandle implements InstanceHandle {
 
         private ComponentInstance iPOJOComponentInstance;
 
-        public BaseInstanceHandler(ComponentInstance iPOJOComponentInstance) {
+        public BaseInstanceHandle(ComponentInstance iPOJOComponentInstance) {
             this.iPOJOComponentInstance = iPOJOComponentInstance;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public String getInstanceName() {
             return iPOJOComponentInstance.getInstanceName();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void stop() {
             iPOJOComponentInstance.stop();
             iPOJOComponentInstance.dispose();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public InstanceState getState() {
             switch (iPOJOComponentInstance.getState()) {

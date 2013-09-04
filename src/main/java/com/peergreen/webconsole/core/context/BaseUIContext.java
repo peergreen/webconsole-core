@@ -22,21 +22,33 @@ public class BaseUIContext implements UIContext {
         this.uiId = uiId;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ISecurityManager getSecurityManager() {
         return securityManager;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public UI getUI() {
         return ui;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public ViewNavigator getViewNavigator() {
         return navigator;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getUIId() {
         return uiId;

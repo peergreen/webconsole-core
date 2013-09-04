@@ -7,10 +7,10 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 
 /**
+ * Web Console security manager implementation
  * @author Mohammed Boukada
  */
 public class SecurityManager implements ISecurityManager {
@@ -22,13 +22,11 @@ public class SecurityManager implements ISecurityManager {
     private boolean userLogged = false;
 
     public SecurityManager(Subject subject) {
-        Iterator iterator = subject.getPrincipals().iterator();
-        while (iterator.hasNext()) {
-            Object object = iterator.next();
-            if (!(object instanceof Group)) {
-                principalName = ((Principal) object).getName();
+        for (Principal principal : subject.getPrincipals()) {
+            if (!(principal instanceof Group)) {
+                principalName = principal.getName();
             } else {
-                Enumeration e = ((Group) object).members();
+                Enumeration e = ((Group) principal).members();
                 while (e.hasMoreElements()) {
                     principalRoles.add(((Principal) e.nextElement()).getName());
                 }
@@ -37,11 +35,17 @@ public class SecurityManager implements ISecurityManager {
         userLogged = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isUserInRole(String role) {
         return "all".equals(role.toLowerCase()) || principalRoles.contains(role);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isUserInRoles(String[] roles) {
         for (String role : roles) {
@@ -52,11 +56,17 @@ public class SecurityManager implements ISecurityManager {
         return roles.length == 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getUserName() {
         return principalName;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isUserLogged() {
         return userLogged;

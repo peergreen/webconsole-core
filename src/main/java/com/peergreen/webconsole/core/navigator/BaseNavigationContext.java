@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Navigation context implementation
  * @author Mohammed Boukada
  */
 public class BaseNavigationContext implements NavigationContext {
@@ -23,16 +24,25 @@ public class BaseNavigationContext implements NavigationContext {
         this.properties = properties;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setPath(String path) {
         this.path = path;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getPath() {
         return path;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Map<String, Object> getProperties() {
         return properties;

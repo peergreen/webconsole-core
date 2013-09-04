@@ -8,7 +8,7 @@ import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.core.context.BaseUIContext;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
-import com.peergreen.webconsole.core.extension.InstanceHandler;
+import com.peergreen.webconsole.core.extension.InstanceHandle;
 import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.core.navigator.BaseViewNavigator;
 import com.peergreen.webconsole.core.notifier.InternalNotifierService;
@@ -89,6 +89,10 @@ public class BaseUI extends UI implements Serializable {
     private static final String PEERGREEN_USER_COOKIE_NAME = "peergreen-user";
 
     private static final String ANONYMOUS_USER = "Anonymous";
+
+    public static final String HOME_SCOPE = "home";
+
+    public static final String HOME_ALIAS = "/" + HOME_SCOPE;
 
     /**
      * Logger.
@@ -212,8 +216,10 @@ public class BaseUI extends UI implements Serializable {
                 if (isAllowedToShowScope(roles)) {
                     boolean failed = false;
                     try {
-                        InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
-                        if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
+                        InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
+                        if (InstanceState.STOPPED.equals(instance.getState())) {
+                            failed = true;
+                        }
                         scopeFactory.setInstance(instance);
                     } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
                         LOGGER.error(e.getMessage(), e);
@@ -475,144 +481,15 @@ public class BaseUI extends UI implements Serializable {
             {
                 setSizeFull();
                 addStyleName("main-view");
-                addComponent(new VerticalLayout() {
-                    // Sidebar
-                    {
-                        addStyleName("sidebar");
-                        setWidth(null);
-                        setHeight("100%");
 
-                        // Branding element
-                        addComponent(new CssLayout() {
-                            {
-                                addStyleName("branding");
-                                Label logo = new Label(
-                                        formatTitle(consoleName),
-                                        ContentMode.HTML);
-                                logo.setSizeUndefined();
-                                addComponent(logo);
-                            }
-                        });
-
-                        // Main menu
-                        addComponent(menu);
-                        setExpandRatio(menu, 1);
-
-                        if (securityManager != null) {
-                            // User menu
-                            VerticalLayout menuView = new VerticalLayout() {
-                                {
-                                    setSizeUndefined();
-                                    addStyleName("user");
-                                    Image profilePic = new Image(
-                                            null,
-                                            new ThemeResource("img/profile-pic.png"));
-                                    profilePic.setWidth("34px");
-                                    addComponent(profilePic);
-                                    Label userName = new Label(securityManager.getUserName());
-                                    userName.setSizeUndefined();
-                                    addComponent(userName);
-
-                                    if (!ANONYMOUS_USER.equals(securityManager.getUserName())) {
-                                        MenuBar.Command cmd = new MenuBar.Command() {
-                                            @Override
-                                            public void menuSelected(
-                                                    MenuBar.MenuItem selectedItem) {
-                                                Notification
-                                                        .show("Not implemented yet");
-                                            }
-                                        };
-                                        MenuBar settings = new MenuBar();
-                                        MenuBar.MenuItem settingsMenu = settings.addItem("",
-                                                null);
-                                        settingsMenu.setStyleName("icon-cog");
-                                        settingsMenu.addItem("Settings", cmd);
-                                        settingsMenu.addItem("Preferences", cmd);
-                                        settingsMenu.addSeparator();
-                                        settingsMenu.addItem("My Account", cmd);
-                                        addComponent(settings);
-
-                                        Button exit = new NativeButton("Exit");
-                                        exit.addStyleName("icon-cancel");
-                                        exit.setDescription("Sign Out");
-                                        addComponent(exit);
-                                        exit.addClickListener(new Button.ClickListener() {
-                                            @Override
-                                            public void buttonClick(Button.ClickEvent event) {
-                                                ((SecurityManager) securityManager).setUserLogged(false);
-                                                for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
-                                                    ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
-                                                    if (scopeFactory.getInstance() != null) {
-                                                        scopeFactory.getInstance().stop();
-                                                        scopeFactory.setInstance(null);
-                                                    }
-                                                }
-                                                nbScopesToBound = 0;
-                                                progressIndicator.setValue((float) 0);
-                                                getSession().setAttribute("is.logged", false);
-                                                buildLoginView(true);
-                                            }
-                                        });
-                                    }
-                                }
-                            };
-                            addComponent(menuView);
-                        }
-                    }
-                });
-
-                VerticalLayout contentRoot = new VerticalLayout() {
-                    {
-                        setSizeFull();
-                        HorizontalLayout toolbar = new HorizontalLayout() {
-                            {
-                                setWidth("100%");
-                                setSpacing(true);
-                                addStyleName("toolbar");
-                                addComponent(tasksBar);
-                                setComponentAlignment(tasksBar, Alignment.MIDDLE_LEFT);
-                                setExpandRatio(tasksBar, 1);
-
-                                notify.setDescription("Notifications");
-                                // notify.addStyleName("borderless");
-                                notify.addStyleName("notifications");
-                                notify.addStyleName("icon-only");
-                                notify.addStyleName("icon-notification");
-                                notify.addStyleName("fontello");
-
-                                notify.addClickListener(new Button.ClickListener() {
-                                    @Override
-                                    public void buttonClick(Button.ClickEvent event) {
-                                        event.getButton().removeStyleName("unread");
-                                        event.getButton().setDescription("Notifications");
-                                        if (notifications != null && notifications.getUI() != null)
-                                            notifications.close();
-                                        else {
-                                            setNotificationsWindowPosition(event);
-                                            getUI().addWindow(notifications);
-                                            notifications.focus();
-                                        }
-                                    }
-                                });
-                                addComponent(notify);
-                                setComponentAlignment(notify, Alignment.MIDDLE_LEFT);
-                            }
-                        };
-
-                        addComponent(toolbar);
-                        addComponent(content);
-                        content.setSizeFull();
-                        content.addStyleName("view-content");
-                        setExpandRatio(content, 1.5f);
-
-                    }
-                };
+                addComponent(new SidebarView());
+                VerticalLayout contentRoot = new ConsoleContentView(notify, tasksBar);
                 addComponent(contentRoot);
                 setExpandRatio(contentRoot, 1);
             }
 
         };
-        buildNotifications();
+        notifications = new NotificationWindow();
         notifierService.addNotificationsButton(notify, notifications, this);
         notifierService.addTasksBar(tasksBar, this);
 
@@ -634,8 +511,10 @@ public class BaseUI extends UI implements Serializable {
                 ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
                 boolean failed = false;
                 try {
-                    InstanceHandler instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
-                    if (InstanceState.STOPPED.equals(instance.getState())) failed = true;
+                    InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
+                    if (InstanceState.STOPPED.equals(instance.getState())) {
+                        failed = true;
+                    }
                     scopeFactory.setInstance(instance);
                 } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
                     LOGGER.error(e.getMessage(), e);
@@ -809,9 +688,9 @@ public class BaseUI extends UI implements Serializable {
             scopesNames.add(scopeEntry.getValue().getScopeAlias());
         }
         Collections.sort(scopesNames);
-        if (scopesNames.contains("/home")) {
-            scopesNames.remove("/home");
-            scopesNames.addFirst("/home");
+        if (scopesNames.contains(HOME_ALIAS)) {
+            scopesNames.remove(HOME_ALIAS);
+            scopesNames.addFirst(HOME_ALIAS);
         }
 
         final List<Button> buttonsToShift = new LinkedList<>();
@@ -821,8 +700,11 @@ public class BaseUI extends UI implements Serializable {
             @Override
             public void run() {
                 for (String scope : scopesNames) {
-                    if ("/home".equals(scope)) continue;
-                    if ("/home".equals(scopeAlias) || scopeAlias.compareTo(scope) < 0) {
+                    if (HOME_ALIAS.equals(scope)) {
+                        continue;
+                    }
+
+                    if (HOME_ALIAS.equals(scopeAlias) || scopeAlias.compareTo(scope) < 0) {
                         buttonsToShift.add(scopes.get(scope).getScopeMenuButton());
                         menu.removeComponent(scopes.get(scope).getScopeMenuButton());
                     }
@@ -870,7 +752,7 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
-    public class TimeOutThread extends Thread {
+    private class TimeOutThread extends Thread {
 
         @Override
         public void run() {
@@ -895,19 +777,154 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
-    private void buildNotifications() {
-        notifications = new Window("Notifications");
-        notifications.setWidth("300px");
-        notifications.setHeight("80%");
-        notifications.addStyleName("notifications");
-        notifications.setClosable(false);
-        notifications.setResizable(false);
-        notifications.setDraggable(false);
-        notifications.setCloseShortcut(ShortcutAction.KeyCode.ESCAPE, null);
-    }
-
     private void setNotificationsWindowPosition(Button.ClickEvent event) {
         notifications.setPositionX(event.getClientX() - event.getRelativeX());
         notifications.setPositionY(event.getClientY() - event.getRelativeY());
+    }
+
+    private class SidebarView extends VerticalLayout {
+
+        public SidebarView() {
+            addStyleName("sidebar");
+            setWidth(null);
+            setHeight("100%");
+
+            // Branding element
+            addComponent(new CssLayout() {
+                {
+                    addStyleName("branding");
+                    Label logo = new Label(
+                            formatTitle(consoleName),
+                            ContentMode.HTML);
+                    logo.setSizeUndefined();
+                    addComponent(logo);
+                }
+            });
+
+            // Main menu
+            addComponent(menu);
+            setExpandRatio(menu, 1);
+
+            if (securityManager != null) {
+                // User menu
+                VerticalLayout menuView = new ScopeMenuView();
+                addComponent(menuView);
+            }
+        }
+    }
+
+    private class ScopeMenuView extends VerticalLayout {
+
+        private ScopeMenuView() {
+            setSizeUndefined();
+            addStyleName("user");
+            Image profilePic = new Image(
+                    null,
+                    new ThemeResource("img/profile-pic.png"));
+            profilePic.setWidth("34px");
+            addComponent(profilePic);
+            Label userName = new Label(securityManager.getUserName());
+            userName.setSizeUndefined();
+            addComponent(userName);
+
+            if (!ANONYMOUS_USER.equals(securityManager.getUserName())) {
+                MenuBar.Command cmd = new MenuBar.Command() {
+                    @Override
+                    public void menuSelected(
+                            MenuBar.MenuItem selectedItem) {
+                        Notification
+                                .show("Not implemented yet");
+                    }
+                };
+                MenuBar settings = new MenuBar();
+                MenuBar.MenuItem settingsMenu = settings.addItem("",
+                        null);
+                settingsMenu.setStyleName("icon-cog");
+                settingsMenu.addItem("Settings", cmd);
+                settingsMenu.addItem("Preferences", cmd);
+                settingsMenu.addSeparator();
+                settingsMenu.addItem("My Account", cmd);
+                addComponent(settings);
+
+                Button exit = new NativeButton("Exit");
+                exit.addStyleName("icon-cancel");
+                exit.setDescription("Sign Out");
+                addComponent(exit);
+                exit.addClickListener(new Button.ClickListener() {
+                    @Override
+                    public void buttonClick(Button.ClickEvent event) {
+                        ((com.peergreen.webconsole.core.security.SecurityManager) securityManager).setUserLogged(false);
+                        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
+                            ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
+                            if (scopeFactory.getInstance() != null) {
+                                scopeFactory.getInstance().stop();
+                                scopeFactory.setInstance(null);
+                            }
+                        }
+                        nbScopesToBound = 0;
+                        progressIndicator.setValue((float) 0);
+                        getSession().setAttribute("is.logged", false);
+                        buildLoginView(true);
+                    }
+                });
+            }
+        }
+    }
+
+    private class ConsoleContentView extends VerticalLayout {
+
+        private ConsoleContentView(final Button notify, final HorizontalLayout tasksBar) {
+            setSizeFull();
+            HorizontalLayout toolbar = new HorizontalLayout();
+            toolbar.setWidth("100%");
+            toolbar.setSpacing(true);
+            toolbar.addStyleName("toolbar");
+            toolbar.addComponent(tasksBar);
+            toolbar.setComponentAlignment(tasksBar, Alignment.MIDDLE_LEFT);
+            toolbar.setExpandRatio(tasksBar, 1);
+
+            notify.setDescription("Notifications");
+            notify.addStyleName("notifications");
+            notify.addStyleName("icon-only");
+            notify.addStyleName("icon-notification");
+            notify.addStyleName("fontello");
+
+            notify.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    event.getButton().removeStyleName("unread");
+                    event.getButton().setDescription("Notifications");
+                    if (notifications != null && notifications.getUI() != null)
+                        notifications.close();
+                    else {
+                        setNotificationsWindowPosition(event);
+                        getUI().addWindow(notifications);
+                        notifications.focus();
+                    }
+                }
+            });
+            toolbar.addComponent(notify);
+            toolbar.setComponentAlignment(notify, Alignment.MIDDLE_LEFT);
+
+            addComponent(toolbar);
+            addComponent(content);
+            content.setSizeFull();
+            content.addStyleName("view-content");
+            setExpandRatio(content, 1.5f);
+        }
+    }
+
+    private class NotificationWindow extends Window {
+
+        public NotificationWindow() {
+            setCaption("Notifications");
+            setHeight("80%");
+            setWidth("300px");
+            addStyleName("notifications");
+            setClosable(false);
+            setResizable(false);
+            setDraggable(false);
+            setCloseShortcut(ShortcutAction.KeyCode.ESCAPE, null);
+        }
     }
 }

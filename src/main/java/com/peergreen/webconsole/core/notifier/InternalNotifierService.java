@@ -8,6 +8,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 
 /**
+ * Internal notifier service
  * @author Mohammed Boukada
  */
 public interface InternalNotifierService extends INotifierService {

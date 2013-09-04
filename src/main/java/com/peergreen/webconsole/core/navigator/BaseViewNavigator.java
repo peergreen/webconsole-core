@@ -5,6 +5,7 @@ import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.core.exception.ExceptionView;
 import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;
+import com.peergreen.webconsole.core.vaadin7.BaseUI;
 import com.peergreen.webconsole.navigator.NavigableModel;
 import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.peergreen.webconsole.utils.UrlFragment;
@@ -118,7 +119,7 @@ public class BaseViewNavigator implements ViewNavigator {
         }
         nav.addView(scope.getScopeAlias(), view);
 
-        if ("home".equals(scope.getScopeName().toLowerCase())) {
+        if (BaseUI.HOME_SCOPE.equals(scope.getScopeName().toLowerCase())) {
             nav.addView("", view);
             nav.addView("/", view);
         }
@@ -130,7 +131,7 @@ public class BaseViewNavigator implements ViewNavigator {
      */
     public void removeRoute(Scope scope) {
         nav.removeView(scope.getScopeAlias());
-        if ("home".equals(scope.getScopeName().toLowerCase())) {
+        if (BaseUI.HOME_SCOPE.equals(scope.getScopeName().toLowerCase())) {
             nav.removeView("");
             nav.removeView("/");
         }
@@ -227,7 +228,7 @@ public class BaseViewNavigator implements ViewNavigator {
             if (event.getViewName().equals(UrlFragment.getFirstFragment(event.getNavigator().getState()))) {
                 String alias = event.getViewName();
                 if ("".equals(alias) || "/".equals(alias)) {
-                    alias = "/home";
+                    alias = BaseUI.HOME_ALIAS;
                 }
                 if (scopes.containsKey(alias)) {
                     scopes.get(alias).getScopeMenuButton().addStyleName("selected");

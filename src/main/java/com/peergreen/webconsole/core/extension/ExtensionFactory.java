@@ -6,8 +6,17 @@ import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
 
 /**
+ * Extension factory
  * @author Mohammed Boukada
  */
 public interface ExtensionFactory {
-    InstanceHandler create(UIContext context) throws MissingHandlerException, UnacceptableConfiguration, ConfigurationException;
+    /**
+     * Create an instance of the extension
+     * @param context UI context
+     * @return extension instance handle
+     * @throws MissingHandlerException
+     * @throws UnacceptableConfiguration
+     * @throws ConfigurationException
+     */
+    InstanceHandle create(UIContext context) throws MissingHandlerException, UnacceptableConfiguration, ConfigurationException;
 }

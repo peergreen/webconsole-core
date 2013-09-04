@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 /**
+ * Session init listener
  * @author Mohammed Boukada
  */
 public class BaseSessionInitListener implements SessionInitListener {

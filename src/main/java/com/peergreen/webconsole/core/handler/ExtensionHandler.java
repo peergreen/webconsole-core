@@ -10,7 +10,7 @@ import com.peergreen.webconsole.Scope;
 import com.peergreen.webconsole.UIContext;
 import com.peergreen.webconsole.Unlink;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
-import com.peergreen.webconsole.core.extension.InstanceHandler;
+import com.peergreen.webconsole.core.extension.InstanceHandle;
 import com.peergreen.webconsole.core.extension.InstanceState;
 import com.peergreen.webconsole.core.notifier.InternalNotifierService;
 import com.peergreen.webconsole.navigator.Navigable;
@@ -62,6 +62,7 @@ import static com.peergreen.webconsole.Constants.WEBCONSOLE_EXTENSION;
 import static java.lang.String.format;
 
 /**
+ * Extension iPOJO handler
  * @author Mohammed Boukada
  */
 @Handler(name = "extension",
@@ -81,7 +82,7 @@ public class ExtensionHandler extends DependencyHandler {
     private List<LinkDependencyCallback> dependencyCallbacks = new ArrayList<>();
     private List<String> notifications = new LinkedList<>();
     private Map<String, ExtensionPointModel> bindings;
-    private Map<ExtensionFactory, InstanceHandler> extensionFactories = new HashMap<>();
+    private Map<ExtensionFactory, InstanceHandle> extensionFactories = new HashMap<>();
 
     public void setOwnInstanceManager(InstanceManager instanceManager) {
         this.ownInstanceManager = instanceManager;
@@ -112,14 +113,22 @@ public class ExtensionHandler extends DependencyHandler {
         super.configure(createBindings(metadata), configuration);
     }
 
+    /**
+     * Set extension type
+     */
     public void setExtensionType() {
         extensionType = ownInstanceManager.getPojoObject().getClass();
     }
 
+    /**
+     * Stop handler. <br />
+     *
+     * Stop children extensions.
+     */
     @Override
     public void stop() {
         super.stop();
-        for (Map.Entry<ExtensionFactory, InstanceHandler> instance : extensionFactories.entrySet()) {
+        for (Map.Entry<ExtensionFactory, InstanceHandle> instance : extensionFactories.entrySet()) {
             instance.getValue().stop();
         }
         uiContext.getViewNavigator().unregisterNavigableModel((Component) getInstanceManager().getPojoObject());
@@ -128,14 +137,14 @@ public class ExtensionHandler extends DependencyHandler {
     @Bind(aggregate = true, optional = true)
     public void bindExtensionFactory(ExtensionFactory extensionFactory, Dictionary properties) {
         if (canBindExtensionFactory(properties)) {
-            InstanceHandler instanceHandler;
+            InstanceHandle instanceHandle;
             boolean failed = false;
             try {
-                instanceHandler = extensionFactory.create(uiContext);
-                if (InstanceState.STOPPED.equals(instanceHandler.getState())) {
+                instanceHandle = extensionFactory.create(uiContext);
+                if (InstanceState.STOPPED.equals(instanceHandle.getState())) {
                     failed = true;
                 }
-                extensionFactories.put(extensionFactory, instanceHandler);
+                extensionFactories.put(extensionFactory, instanceHandle);
             } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
                 failed = true;
             }
@@ -159,6 +168,12 @@ public class ExtensionHandler extends DependencyHandler {
         }
     }
 
+    /**
+     * Set extension properties. {@link com.peergreen.webconsole.Qualifier}'s attributes are added as properties
+     * @param configuration configuration
+     * @return configuration updated
+     * @throws ConfigurationException
+     */
     protected Dictionary setExtensionProperties(Dictionary configuration) throws ConfigurationException {
         Annotation[] annotations = extensionType.getDeclaredAnnotations();
         for (Annotation annotation : annotations) {
@@ -166,7 +181,7 @@ public class ExtensionHandler extends DependencyHandler {
                 Qualifier qualifier = annotation.annotationType().getAnnotation(Qualifier.class);
                 String propertiesPrefix = "".equals(qualifier.value()) ? annotation.annotationType().getName() : qualifier.value();
                 for (Method method : annotation.annotationType().getDeclaredMethods()) {
-                    Object value = null;
+                    Object value;
                     try {
                         value = method.invoke(annotation);
                     } catch (IllegalAccessException | InvocationTargetException e) {
@@ -179,6 +194,16 @@ public class ExtensionHandler extends DependencyHandler {
         return configuration;
     }
 
+    /**
+     * Bind field annotated by {@link com.peergreen.webconsole.Inject} <br />
+     *
+     * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
+     * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
+     * fields type are directly injected.
+     *
+     * @return List of fields to bind
+     * @throws ConfigurationException
+     */
     protected List<Field> bindInjections() throws ConfigurationException {
         fieldsToBind = new ArrayList<>();
         Field[] fields = extensionType.getDeclaredFields();
@@ -187,6 +212,7 @@ public class ExtensionHandler extends DependencyHandler {
                 Class<?> type = field.getType();
                 Object pojo = ownInstanceManager.getPojoObject();
                 Object fieldValue = null;
+
                 if (type.equals(BundleContext.class)) {
                     fieldValue = ownInstanceManager.getBundleContext();
                 } else if (type.equals(ISecurityManager.class)) {
@@ -212,6 +238,11 @@ public class ExtensionHandler extends DependencyHandler {
         return fieldsToBind;
     }
 
+    /**
+     * Get extension specifications
+     * @param clazz class
+     * @return list of specifications to register
+     */
     protected List<String> getSpecifications(Class<?> clazz) {
         List<String> specifications = new ArrayList<>();
         specifications.add(clazz.getName());
@@ -226,11 +257,22 @@ public class ExtensionHandler extends DependencyHandler {
         return specifications;
     }
 
+    /**
+     * Whether extension can be bound to this extension
+     * @param properties extension to bound
+     * @return True if extension point is one of those provided by this extension and if user logged in has
+     * the right roles, false otherwise.
+     */
     private boolean canBindExtensionFactory(Dictionary properties) {
         String extensionId = (String) properties.get(EXTENSION_POINT);
         return extensionId != null && bindings.containsKey(extensionId) && isInRoles(properties);
     }
 
+    /**
+     * Is user in roles
+     * @param properties to get required roles
+     * @return True if logged in user has required roles, false otherwise.
+     */
     private boolean isInRoles(Dictionary properties) {
         if (uiContext.getSecurityManager() == null) {
             return true;
@@ -239,6 +281,15 @@ public class ExtensionHandler extends DependencyHandler {
         return uiContext.getSecurityManager().isUserInRoles(extensionRoles);
     }
 
+    /**
+     * Create methods and fields bindings. <br />
+     *
+     * Methods annotated by {@link com.peergreen.webconsole.Link} and {@link com.peergreen.webconsole.Unlink}
+     * will be called when a specification matches the filter.
+     * @param metadata metadata
+     * @return metadata updated
+     * @throws ConfigurationException
+     */
     protected Element createBindings(Element metadata) throws ConfigurationException {
         Method[] methods = extensionType.getDeclaredMethods();
         bindings = new HashMap<>();
@@ -330,6 +381,11 @@ public class ExtensionHandler extends DependencyHandler {
         return newMetadata;
     }
 
+    /**
+     * Create navigation model if extension a scope or navigable
+     * @param configuration configuration
+     * @throws ConfigurationException
+     */
     private void setExtensionNavigationModel(Dictionary configuration) throws ConfigurationException {
         ExtensionPoint extension = extensionType.getAnnotation(ExtensionPoint.class);
         String alias = "";
@@ -388,6 +444,10 @@ public class ExtensionHandler extends DependencyHandler {
         typeDesc.addProperty(new PropertyDescription(WEBCONSOLE_EXTENSION, "java.lang.String", "true", true));
     }
 
+    /**
+     * Extension instance state listener. Register extension's specifications
+     * @author Mohammed Boukada
+     */
     public class ExtensionInstanceStateListener implements InstanceStateListener {
 
         private String[] specifications;

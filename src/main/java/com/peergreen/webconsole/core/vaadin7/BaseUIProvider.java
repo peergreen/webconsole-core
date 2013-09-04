@@ -15,14 +15,18 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.osgi.framework.BundleContext;
+import org.ow2.util.log.Log;
+import org.ow2.util.log.LogFactory;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
-import static com.peergreen.webconsole.Constants.*;
+import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
+import static com.peergreen.webconsole.Constants.REQUIRES_FILTER;
+import static com.peergreen.webconsole.Constants.SCOPE_EXTENSION_POINT;
+import static com.peergreen.webconsole.Constants.UI_ID;
 
 /**
  * Vaadin Base console UI provider
@@ -32,12 +36,17 @@ import static com.peergreen.webconsole.Constants.*;
 @Provides(specifications = UIProvider.class)
 public class BaseUIProvider extends UIProvider {
 
+    /**
+     * Logger.
+     */
+    private static final Log LOGGER = LogFactory.getLog(BaseUIProvider.class);
+
     private String consoleName;
     private String consoleAlias;
     private Boolean enableSecurity;
     private List<String> defaultRoles;
 
-    List<ComponentInstance> uis = new ArrayList<>();
+    private List<ComponentInstance> uis = new ArrayList<>();
 
     /**
      * Base console UI ipojo component factory
@@ -45,20 +54,7 @@ public class BaseUIProvider extends UIProvider {
     @Requires(from = "com.peergreen.webconsole.core.vaadin7.BaseUI")
     private Factory factory;
 
-    /**
-     * Bundle context
-     */
-    private BundleContext bundleContext;
-
     private int i = 0;
-
-    /**
-     * Vaadin base UI provider constructor
-     * @param bundleContext
-     */
-    public BaseUIProvider(BundleContext bundleContext) {
-        this.bundleContext = bundleContext;
-    }
 
     /**
      * Set console
@@ -97,7 +93,7 @@ public class BaseUIProvider extends UIProvider {
             String uiId = consoleAlias + "-" + i;
             ui = new BaseUI(consoleName, SCOPE_EXTENSION_POINT, uiId, enableSecurity, defaultRoles);
             // register the ui to broadcaster
-            //DatabaseProvider.javaBroadcaster.register(ui);
+            // DatabaseProvider.javaBroadcaster.register(ui);
             // Configuration properties for ipojo component
             Dictionary<String, Object> props = new Hashtable<>();
             props.put("instance.object", ui);
@@ -116,8 +112,8 @@ public class BaseUIProvider extends UIProvider {
             });
             uis.add(instance);
             i++;
-        } catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException unacceptableConfiguration) {
-            unacceptableConfiguration.printStackTrace();
+        } catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
 
         return ui;

@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Notifier service
+ * Notifier service implementation
  * @author Mohammed Boukada
  */
 @Component
@@ -57,7 +57,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         overlays.clear();
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void addNotification(String notification) {
@@ -78,12 +79,18 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void startTask(Object worker, String message, Long contentLength) {
         tasks.add(new Task(worker, message, contentLength));
         showTask();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void updateTask(final Object worker, final Long bytesReceived) {
         for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
@@ -97,6 +104,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void stopTask(Object worker) {
         if (currentTask.equals(getTask(worker))) {
@@ -119,6 +129,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
+    /**
+     * Show current task
+     */
     private void showTask() {
         if (currentTask == null && tasks.size() > 0) {
             final Task task = tasks.peek();
@@ -143,6 +156,11 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
+    /**
+     * Get task
+     * @param worker task worker
+     * @return task descriptor
+     */
     private Task getTask(Object worker) {
         for (Task task : tasks) {
             if (worker.equals(task.getWorker())) {
@@ -152,6 +170,10 @@ public class NotifierService implements InternalNotifierService, Serializable {
         return null;
     }
 
+    /**
+     * Remove task
+     * @param worker task worker
+     */
     private void removeTask(Object worker) {
         for (Task task : tasks) {
             if (worker.equals(task.getWorker())) {
@@ -161,6 +183,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearComponentsForUI(UI ui) {
         notificationButtons.remove(ui);
@@ -177,7 +202,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
     }
 
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     public NotificationOverlay addOverlay(String caption, String text, String style) {
         NotificationOverlay o = new NotificationOverlay();
@@ -188,7 +214,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         return o;
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     public void addScopeButton(com.vaadin.ui.Component scope, Button button, UI ui, boolean notify) {
         scopesButtons.put(scope, new ScopeButton(button, ui, 0));
@@ -197,7 +224,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     public void removeScopeButton(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
@@ -205,6 +233,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addNotificationsButton(Button button, final Window window, final UI ui) {
         final VerticalLayout layout = new VerticalLayout();
@@ -217,6 +248,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
         button.addClickListener(new NotificationClickListener(layout));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addTasksBar(HorizontalLayout tasksBar, UI ui) {
         tasksBars.put(ui, tasksBar);
@@ -230,7 +264,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      * @param scope
      */
     public void removeBadge(com.vaadin.ui.Component scope) {
@@ -241,7 +276,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
                    getInitialCaption(scopesButtons.get(scope).getButton()));
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     public void incrementBadge(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope) && scopesButtons.get(scope).getButton().isAttached()) {
@@ -256,7 +292,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     public void decrementBadge(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope) && scopesButtons.get(scope).getButton().isAttached()) {
@@ -273,7 +310,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Set badge as new
-     * @param button
+     * @param button button
+     * @param ui button UI
      */
     private void setBadgeAsNew(final Button button, UI ui) {
         button.setHtmlContentAllowed(true);
@@ -283,6 +321,12 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     }
 
+    /**
+     * Set button caption
+     * @param button button
+     * @param ui button UI
+     * @param caption new button caption
+     */
     private void setCaption(final Button button, UI ui, final String caption) {
         ui.access(new Runnable() {
             @Override
@@ -294,8 +338,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Update badge when it is changed
-     * @param scope
-     * @param op
+     * @param scope scope
+     * @param op operation (+1, -1, set to 0)
      */
     private void updateBadge(com.vaadin.ui.Component scope, int op) {
         if (scopesButtons.containsKey(scope)) {
@@ -313,8 +357,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Get initial caption of the button
-     * @param button
-     * @return
+     * @param button button
+     * @return button caption
      */
     private String getInitialCaption(Button button) {
         if (button.getCaption().contains("<span")) {
@@ -323,6 +367,10 @@ public class NotifierService implements InternalNotifierService, Serializable {
         return button.getCaption();
     }
 
+    /**
+     * Update notification button, make it as unread.
+     * @param notificationButton notification button
+     */
     private void updateNotificationBadge(NotificationButton notificationButton) {
         int badge = notificationButton.getBadge();
         notificationButton.getButton().addStyleName("unread");
@@ -330,6 +378,11 @@ public class NotifierService implements InternalNotifierService, Serializable {
         notificationButton.getButton().setDescription("Notifications (" + badge + " unread)");
     }
 
+    /**
+     * Format time
+     * @param t timestamp
+     * @return time string
+     */
     private String formatTime(Long t) {
         Long days = TimeUnit.MILLISECONDS.toDays(t);
         Long months = days / 30;

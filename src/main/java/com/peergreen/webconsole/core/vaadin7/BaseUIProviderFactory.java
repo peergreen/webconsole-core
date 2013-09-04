@@ -11,7 +11,8 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.osgi.framework.BundleContext;
+import org.ow2.util.log.Log;
+import org.ow2.util.log.LogFactory;
 
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -29,27 +30,20 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BaseUIProviderFactory implements UIProviderFactory {
 
     /**
+     * Logger.
+     */
+    private static final Log LOGGER = LogFactory.getLog(BaseUIProviderFactory.class);
+
+    /**
      * Base console UI provider ipojo component factory
      */
     @Requires(from = "com.peergreen.webconsole.core.vaadin7.BaseUIProvider")
     private Factory factory;
 
-    /**
-     * Bundle context
-     */
-    private BundleContext bundleContext;
-
     private Map<String, ComponentInstance> providers = new ConcurrentHashMap<>();
 
     /**
-     * Vaadin UI provider factory constructor
-     * @param bundleContext
-     */
-    public BaseUIProviderFactory(BundleContext bundleContext) {
-        this.bundleContext = bundleContext;
-    }
-
-    /** {@inheritDoc}
+     * {@inheritDoc}
      */
     @Override
     public UIProvider createUIProvider(Dictionary properties) {
@@ -64,7 +58,7 @@ public class BaseUIProviderFactory implements UIProviderFactory {
 
         try {
             // Create an instance of base console UI provider
-            provider = new BaseUIProvider(bundleContext);
+            provider = new BaseUIProvider();
             provider.setConsoleName(consoleName);
             provider.setConsoleAlias(consoleAlias);
             provider.setEnableSecurity(enableSecurity);
@@ -78,12 +72,15 @@ public class BaseUIProviderFactory implements UIProviderFactory {
             // Create ipojo component from its factory
             String instanceName = (String) properties.get("instance.name");
             providers.put(instanceName, factory.createComponentInstance(props));
-        } catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException unacceptableConfiguration) {
-            unacceptableConfiguration.printStackTrace();
+        } catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException ex) {
+            LOGGER.error(ex.getMessage(), ex);
         }
         return provider;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void stopUIProvider(Dictionary properties) {
         String instanceName = (String) properties.get("instance.name");

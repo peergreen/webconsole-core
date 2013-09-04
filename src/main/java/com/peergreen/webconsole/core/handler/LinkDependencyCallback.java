@@ -104,6 +104,9 @@ public class LinkDependencyCallback extends DependencyCallback {
         this.notifierService = notifierService;
     }
 
+    /**
+     * Update scope button badges
+     */
     private void updateNotifier() {
         if (notifierService != null) {
             if (m_methodObj.isAnnotationPresent(Link.class)) {

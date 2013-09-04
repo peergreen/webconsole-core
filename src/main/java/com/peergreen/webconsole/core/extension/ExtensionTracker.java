@@ -29,6 +29,7 @@ import java.util.Map;
 import static java.lang.String.format;
 
 /**
+ * Extension tracker
  * @author Mohammed Boukada
  */
 @Component
@@ -55,6 +56,11 @@ public class ExtensionTracker implements TrackerCustomizer {
         this.extensionFactory = extensionFactory;
     }
 
+    /**
+     * Create and open tracker <br />
+     *
+     * This tracker focus on classes annotated by {@link com.peergreen.webconsole.Extension}.
+     */
     @Validate
     public void start() {
         String filter = format("(&(%s=true)(factory.state=1))", Constants.WEBCONSOLE_EXTENSION);
@@ -66,6 +72,9 @@ public class ExtensionTracker implements TrackerCustomizer {
         }
     }
 
+    /**
+     * Stop tracking
+     */
     @Invalidate
     public void stop() {
         tracker.close();
@@ -76,7 +85,11 @@ public class ExtensionTracker implements TrackerCustomizer {
         return true;
     }
 
-
+    /**
+     * A class matches tracker filer, it is an extension then create
+     * its extension factory and start it.
+     * @param reference service reference
+     */
     @Override
     public void addedService(ServiceReference reference) {
         // get extension factory
@@ -112,6 +125,11 @@ public class ExtensionTracker implements TrackerCustomizer {
 
     }
 
+    /**
+     * Stop extension
+     * @param reference service reference
+     * @param service service object
+     */
     @Override
     public void removedService(ServiceReference reference, Object service) {
         instances.get(reference).stop();

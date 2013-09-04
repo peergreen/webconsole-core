@@ -12,10 +12,14 @@ public interface UIProviderFactory {
 
     /**
      * Create an UI provider for a console
-     * @param properties
-     * @return
+     * @param properties properties
+     * @return UI provider
      */
     UIProvider createUIProvider(Dictionary properties);
 
+    /**
+     * Stop Ui provider
+     * @param properties properties
+     */
     void stopUIProvider(Dictionary properties);
 }
