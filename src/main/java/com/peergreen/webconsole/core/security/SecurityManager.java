@@ -47,13 +47,13 @@ public class SecurityManager implements ISecurityManager {
      * {@inheritDoc}
      */
     @Override
-    public boolean isUserInRoles(String[] roles) {
+    public boolean isUserInRoles(List<String> roles) {
         for (String role : roles) {
             if ("all".equals(role.toLowerCase()) || principalRoles.contains(role)) {
                 return true;
             }
         }
-        return roles.length == 0;
+        return roles.size() == 0;
     }
 
     /**

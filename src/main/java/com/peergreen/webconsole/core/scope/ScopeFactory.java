@@ -3,6 +3,8 @@ package com.peergreen.webconsole.core.scope;
 
 import com.peergreen.webconsole.core.extension.InstanceHandle;
 
+import java.util.List;
+
 /**
  * Scope factory descriptor
  * @author Mohammed Boukada
@@ -12,7 +14,7 @@ public class ScopeFactory {
     /**
      * Roles allowed
      */
-    private String[] roles;
+    private List<String> roles;
 
     /**
      * Scope instance handle
@@ -23,7 +25,7 @@ public class ScopeFactory {
      * Create scope factory descriptor
      * @param roles roles allowed
      */
-    public ScopeFactory(String[] roles) {
+    public ScopeFactory(List<String> roles) {
         this.roles = roles;
     }
 
@@ -31,7 +33,7 @@ public class ScopeFactory {
      * Get allowed roles
      * @return allowed roles
      */
-    public String[] getRoles() {
+    public List<String> getRoles() {
         return roles;
     }
 

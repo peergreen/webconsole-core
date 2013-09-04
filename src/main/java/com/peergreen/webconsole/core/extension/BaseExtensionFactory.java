@@ -41,6 +41,7 @@ public class BaseExtensionFactory implements ExtensionFactory {
         Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(Constants.EXTENSION_POINT, extensionPoint);
         properties.put(Constants.UI_CONTEXT, context);
+        properties.put(Constants.EXTENSION_ROLES, roles);
         return new BaseInstanceHandle(factory.createComponentInstance(properties));
     }
 

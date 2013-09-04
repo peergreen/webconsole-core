@@ -278,20 +278,17 @@ public class ExtensionHandler extends DependencyHandler {
             return true;
         }
         String[] extensionRoles = (String[]) properties.get(EXTENSION_ROLES);
-        return uiContext.getSecurityManager().isUserInRoles(extensionRoles);
+        List<String> listRoles = (extensionRoles == null) ? new ArrayList<String>() : Arrays.asList(extensionRoles);
+        return uiContext.getSecurityManager().isUserInRoles(listRoles);
     }
 
     /**
-     * Create methods and fields bindings. <br />
-     *
-     * Methods annotated by {@link com.peergreen.webconsole.Link} and {@link com.peergreen.webconsole.Unlink}
-     * will be called when a specification matches the filter.
+     * Create methods and fields bindings
      * @param metadata metadata
      * @return metadata updated
      * @throws ConfigurationException
      */
     protected Element createBindings(Element metadata) throws ConfigurationException {
-        Method[] methods = extensionType.getDeclaredMethods();
         bindings = new HashMap<>();
 
         Element newMetadata = new Element("component", null);
@@ -304,6 +301,18 @@ public class ExtensionHandler extends DependencyHandler {
             newMetadata.addAttribute(attribute);
         }
 
+        getCallbackMethods();
+        addCallbackMethodsToMetadata(newMetadata);
+        addRequiredFieldsToMetadata(newMetadata);
+        return newMetadata;
+    }
+
+    /**
+     * Methods annotated by {@link com.peergreen.webconsole.Link} and {@link com.peergreen.webconsole.Unlink}
+     * will be called when a specification matches the filter.
+     */
+    private void getCallbackMethods() {
+        Method[] methods = extensionType.getDeclaredMethods();
         for (Method method : methods) {
             if (method.isAnnotationPresent(Link.class)) {
                 Link link = method.getAnnotation(Link.class);
@@ -343,7 +352,13 @@ public class ExtensionHandler extends DependencyHandler {
                 }
             }
         }
+    }
 
+    /**
+     * Add callback methods to extension metadata
+     * @param metadata metadata
+     */
+    private void addCallbackMethodsToMetadata(Element metadata) {
         for (Map.Entry<String, ExtensionPointModel> binding : bindings.entrySet()) {
             String extensionPointId = binding.getKey();
             ExtensionPointModel extensionPointModel = binding.getValue();
@@ -369,16 +384,21 @@ public class ExtensionHandler extends DependencyHandler {
                 unbindCallback.addAttribute(new Attribute("type", "unbind"));
                 requires.addElement(unbindCallback);
             }
-            newMetadata.addElement(requires);
+            metadata.addElement(requires);
         }
+    }
 
+    /**
+     * Add required fields to metadata
+     * @param metadata metadata
+     */
+    private void addRequiredFieldsToMetadata(Element metadata) {
         for (Field field : fieldsToBind) {
             Element requires = new Element("requires", null);
             requires.addAttribute(new Attribute("field", field.getName()));
             requires.addAttribute(new Attribute("filter", String.format("(|(%s=%s)(!(%s=*)))", UI_ID, uiContext.getUIId(), UI_ID)));
-            newMetadata.addElement(requires);
+            metadata.addElement(requires);
         }
-        return newMetadata;
     }
 
     /**
@@ -406,27 +426,7 @@ public class ExtensionHandler extends DependencyHandler {
                 alias = '/' + alias;
             }
 
-            boolean found = false;
-            for (Method method : extensionType.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(Navigate.class)) {
-                    if (found) {
-                        LOGGER.error("Webconsole extension should have a unique method annotated with ''{0}''", Navigate.class.getName());
-                        continue;
-                    }
-
-                    // default alias is class name
-                    Class<?>[] parameterTypes = method.getParameterTypes();
-                    if (parameterTypes.length != 1){
-                        LOGGER.error("Method annotated with @Navigate should have one parameter");
-                        continue;
-                    } else if (parameterTypes[0] != NavigationContext.class) {
-                        LOGGER.error("The parameter for the method annotated with @Navigate should be instance of ''{0}''", NavigationContext.class.getName());
-                        continue;
-                    }
-                    callbackMethod = method;
-                    found = true;
-                }
-            }
+            callbackMethod = getNavigateCallbackMethod();
         }
 
         if (!"".equals(alias)) {
@@ -435,6 +435,36 @@ public class ExtensionHandler extends DependencyHandler {
             uiContext.getViewNavigator().registerNavigableModel((Component) getInstanceManager().getPojoObject(), navigableModel);
             configuration.put(EXTENSION_ALIAS, alias);
         }
+    }
+
+    /**
+     * Get navigate callback method
+     * @return navigate callback method
+     */
+    private Method getNavigateCallbackMethod() {
+        Method callbackMethod = null;
+        boolean found = false;
+        for (Method method : extensionType.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Navigate.class)) {
+                if (found) {
+                    LOGGER.error("Webconsole extension should have a unique method annotated with ''{0}''", Navigate.class.getName());
+                    continue;
+                }
+
+                // default alias is class name
+                Class<?>[] parameterTypes = method.getParameterTypes();
+                if (parameterTypes.length != 1){
+                    LOGGER.error("Method annotated with @Navigate should have one parameter");
+                    continue;
+                } else if (parameterTypes[0] != NavigationContext.class) {
+                    LOGGER.error("The parameter for the method annotated with @Navigate should be instance of ''{0}''", NavigationContext.class.getName());
+                    continue;
+                }
+                callbackMethod = method;
+                found = true;
+            }
+        }
+        return callbackMethod;
     }
 
     @Override
@@ -517,7 +547,7 @@ public class ExtensionHandler extends DependencyHandler {
         }
     }
 
-    public static interface InstanceManager {
+    public interface InstanceManager {
         Object getPojoObject();
         BundleContext getBundleContext();
         void addInstanceStateListener(InstanceStateListener listener);

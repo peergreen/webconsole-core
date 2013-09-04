@@ -378,15 +378,22 @@ public class NotifierService implements InternalNotifierService, Serializable {
         notificationButton.getButton().setDescription("Notifications (" + badge + " unread)");
     }
 
+    private static final int TWELVE = 12;
+    private static final int TWENTY_FOUR = 12;
+    private static final int THIRTEEN = 30;
+    private static final int SIXTY = 60;
+    private static final int THOUSAND = 1000;
+
     /**
      * Format time
      * @param t timestamp
      * @return time string
      */
     private String formatTime(Long t) {
+
         Long days = TimeUnit.MILLISECONDS.toDays(t);
-        Long months = days / 30;
-        Long years = months / 12;
+        Long months = days / THIRTEEN;
+        Long years = months / TWELVE;
 
         StringBuilder date = new StringBuilder();
         if (years > 0) {
@@ -413,7 +420,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
                         date.append(" days");
                     }
                 } else {
-                    Long hours = TimeUnit.MILLISECONDS.toHours(t - days * 24 * 60 * 60 * 1000);
+                    Long hours = TimeUnit.MILLISECONDS.toHours(t - days * TWENTY_FOUR * SIXTY * SIXTY * THOUSAND);
                     if (hours > 0) {
                         date.append(hours);
                         if (hours == 1) {
@@ -422,7 +429,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
                             date.append(" hours");
                         }
                     } else {
-                        Long minutes = TimeUnit.MILLISECONDS.toMinutes(t - hours * 60 * 60 * 1000);
+                        Long minutes = TimeUnit.MILLISECONDS.toMinutes(t - hours * SIXTY * SIXTY * THOUSAND);
                         if (minutes > 0) {
                             date.append(minutes);
                             if (minutes == 1) {
@@ -440,6 +447,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         date.append(" ago");
         return date.toString();
     }
+
+    private static final int MAX_NB_NOTIFICATIONS = 50;
 
     /**
      * @author Mohammed Boukada
@@ -465,7 +474,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
                 layout.removeAllComponents();
                 int i = 0;
                 Iterator<Notification> iterator = notifications.descendingIterator();
-                while (iterator.hasNext() && i < 50) {
+                while (iterator.hasNext() && i < MAX_NB_NOTIFICATIONS) {
                     Notification notification = iterator.next();
                     layout.addComponent(new Label("<hr>", ContentMode.HTML));
                     Label message = new Label("<b>" + notification.getMessage() + "</b>", ContentMode.HTML);
@@ -484,10 +493,13 @@ public class NotifierService implements InternalNotifierService, Serializable {
      * @author Mohammed Boukada
      */
     private class CleanupThread extends Thread {
+
+        private static final int TWO_SECONDS = 2000;
+
         @Override
         public void run() {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(TWO_SECONDS);
                 for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
                     UI ui = taskBar.getKey();
                     if (ui.isClosing()) {

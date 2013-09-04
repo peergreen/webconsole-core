@@ -64,6 +64,8 @@ import org.ow2.util.log.LogFactory;
 import javax.security.auth.Subject;
 import javax.servlet.http.Cookie;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -131,7 +133,7 @@ public class BaseUI extends UI implements Serializable {
      */
     private ProgressIndicator progressIndicator = new ProgressIndicator(new Float(0.0));
 
-    private int nbScopesToBound = 0;
+    private int nbScopesToBind = 0;
 
     /**
      * Scopes bound
@@ -209,11 +211,12 @@ public class BaseUI extends UI implements Serializable {
     @Bind(aggregate = true, optional = true)
     public void bindExtensionFactory(ExtensionFactory extensionFactory, Dictionary props) {
         if (canAddExtensionFactory(props)) {
-            String roles[] = (String[]) props.get(Constants.EXTENSION_ROLES);
             scopesFactories.remove(extensionFactory);
-            ScopeFactory scopeFactory = new ScopeFactory(roles);
+            String[] roles = (String[]) props.get(Constants.EXTENSION_ROLES);
+            List<String> listRoles = (roles == null) ? new ArrayList<String>() : Arrays.asList(roles);
+            ScopeFactory scopeFactory = new ScopeFactory(listRoles);
             if (progressIndicator.getValue() >= 1) {
-                if (isAllowedToShowScope(roles)) {
+                if (isAllowedToShowScope(listRoles)) {
                     boolean failed = false;
                     try {
                         InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
@@ -227,7 +230,9 @@ public class BaseUI extends UI implements Serializable {
                     }
                     if (failed) {
                         String error = "Fail to add a scope for main UI. Please see logs";
-                        if(notifierService != null) notifierService.addNotification(error);
+                        if (notifierService != null) {
+                            notifierService.addNotification(error);
+                        }
                     }
                 }
             }
@@ -495,17 +500,38 @@ public class BaseUI extends UI implements Serializable {
 
         menu.removeAllComponents();
 
-        //Compute nb scopes to bound
-        Map<ExtensionFactory, ScopeFactory> scopesToBound = new HashMap<>();
+        //Compute nb scopes to bind
+        Map<ExtensionFactory, ScopeFactory> scopesToBind = new HashMap<>();
         for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
             if (isAllowedToShowScope(scopeFactoryEntry.getValue().getRoles())) {
-                scopesToBound.put(scopeFactoryEntry.getKey(), scopeFactoryEntry.getValue());
+                scopesToBind.put(scopeFactoryEntry.getKey(), scopeFactoryEntry.getValue());
             }
         }
-        nbScopesToBound = scopesToBound.size();
+        nbScopesToBind = scopesToBind.size();
 
         // Tell scopesFactories view factories to create views
-        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesToBound.entrySet()) {
+        createScopeViews(scopesToBind);
+
+        // Start progress indicator
+        root.removeAllComponents();
+        progressIndicatorLayout = new VerticalLayout();
+        progressIndicatorLayout.setSizeFull();
+        progressIndicatorLayout.addStyleName("login-layout");
+        root.addComponent(progressIndicatorLayout);
+        buildProgressIndicatorView();
+
+        menu.addStyleName("menu");
+        menu.setHeight("100%");
+
+        navigateToPageLocation();
+    }
+
+    /**
+     * Create scopes views
+     * @param scopesToBind scope to bound
+     */
+    private void createScopeViews(Map<ExtensionFactory, ScopeFactory> scopesToBind) {
+        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesToBind.entrySet()) {
             if (isAllowedToShowScope(scopeFactoryEntry.getValue().getRoles())) {
                 ExtensionFactory extensionFactory = scopeFactoryEntry.getKey();
                 ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
@@ -528,22 +554,17 @@ public class BaseUI extends UI implements Serializable {
                 }
             }
         }
+    }
 
-        // Start progress indicator
-        root.removeAllComponents();
-        progressIndicatorLayout = new VerticalLayout();
-        progressIndicatorLayout.setSizeFull();
-        progressIndicatorLayout.addStyleName("login-layout");
-        root.addComponent(progressIndicatorLayout);
-        buildProgressIndicatorView();
-
-        menu.addStyleName("menu");
-        menu.setHeight("100%");
-
+    /**
+     * Get page location and navigate to
+     */
+    private void navigateToPageLocation() {
         String f = Page.getCurrent().getUriFragment();
         if (f != null && f.startsWith("!")) {
             f = f.substring(1);
         }
+
         if (f == null) {
             viewNavigator.navigateTo("/");
         } else {
@@ -578,7 +599,7 @@ public class BaseUI extends UI implements Serializable {
         if (scopesFactories.isEmpty()) {
             progressIndicator.setValue(stopValue);
         } else {
-            progressIndicator.setValue(scopesViewsBound/nbScopesToBound);
+            progressIndicator.setValue(scopesViewsBound/ nbScopesToBind);
         }
 
         if (stopValue.equals(progressIndicator.getValue())) {
@@ -657,9 +678,9 @@ public class BaseUI extends UI implements Serializable {
 
             scopes.get(scope.getScopeAlias()).setScopeMenuButton(b);
 
-            if (nbScopesToBound > 0) {
+            if (nbScopesToBind > 0) {
                 Float progressIndicatorValue = progressIndicator.getValue();
-                progressIndicatorValue += (float) (1.0 / nbScopesToBound);
+                progressIndicatorValue += (float) (1.0 / nbScopesToBind);
                 progressIndicator.setValue(progressIndicatorValue);
             }
         }
@@ -717,7 +738,7 @@ public class BaseUI extends UI implements Serializable {
         });
     }
 
-    private boolean isAllowedToShowScope(String[] rolesAllowed) {
+    private boolean isAllowedToShowScope(List<String> rolesAllowed) {
         return securityManager == null || securityManager.isUserInRoles(rolesAllowed);
     }
 
@@ -731,8 +752,7 @@ public class BaseUI extends UI implements Serializable {
             throw new UIDetachedException();
         }
 
-        // TODO hack to avoid exception when another session had lock
-        // TODO PGWK-7
+        // TODO PGWK-7 - hack to avoid exception when another session had lock
         //VaadinService.verifyNoOtherSessionLocked(session);
 
         session.lock();
@@ -754,10 +774,12 @@ public class BaseUI extends UI implements Serializable {
 
     private class TimeOutThread extends Thread {
 
+        private static final int TWO_SECONDS = 2000;
+
         @Override
         public void run() {
             try {
-                sleep(2000);
+                sleep(TWO_SECONDS);
                 if (progressIndicator.getValue() < 1) {
                     access(new Runnable() {
                         @Override
@@ -813,7 +835,7 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
-    private class ScopeMenuView extends VerticalLayout {
+    private final class ScopeMenuView extends VerticalLayout {
 
         private ScopeMenuView() {
             setSizeUndefined();
@@ -861,7 +883,7 @@ public class BaseUI extends UI implements Serializable {
                                 scopeFactory.setInstance(null);
                             }
                         }
-                        nbScopesToBound = 0;
+                        nbScopesToBind = 0;
                         progressIndicator.setValue((float) 0);
                         getSession().setAttribute("is.logged", false);
                         buildLoginView(true);
@@ -871,7 +893,7 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
-    private class ConsoleContentView extends VerticalLayout {
+    private final class ConsoleContentView extends VerticalLayout {
 
         private ConsoleContentView(final Button notify, final HorizontalLayout tasksBar) {
             setSizeFull();
@@ -894,9 +916,9 @@ public class BaseUI extends UI implements Serializable {
                 public void buttonClick(Button.ClickEvent event) {
                     event.getButton().removeStyleName("unread");
                     event.getButton().setDescription("Notifications");
-                    if (notifications != null && notifications.getUI() != null)
+                    if (notifications != null && notifications.getUI() != null) {
                         notifications.close();
-                    else {
+                    } else {
                         setNotificationsWindowPosition(event);
                         getUI().addWindow(notifications);
                         notifications.focus();

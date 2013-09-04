@@ -92,8 +92,6 @@ public class BaseUIProvider extends UIProvider {
             // Create an instance of baseUI
             String uiId = consoleAlias + "-" + i;
             ui = new BaseUI(consoleName, SCOPE_EXTENSION_POINT, uiId, enableSecurity, defaultRoles);
-            // register the ui to broadcaster
-            // DatabaseProvider.javaBroadcaster.register(ui);
             // Configuration properties for ipojo component
             Dictionary<String, Object> props = new Hashtable<>();
             props.put("instance.object", ui);
