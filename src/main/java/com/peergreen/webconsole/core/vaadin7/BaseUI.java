@@ -92,6 +92,9 @@ public class BaseUI extends UI implements Serializable {
 
     private static final String ANONYMOUS_USER = "Anonymous";
 
+    private static final String MAX_WIDTH = "100%";
+    private static final String MAX_HEIGHT = "100%";
+
     public static final String HOME_SCOPE = "home";
 
     public static final String HOME_ALIAS = "/" + HOME_SCOPE;
@@ -215,24 +218,22 @@ public class BaseUI extends UI implements Serializable {
             String[] roles = (String[]) props.get(Constants.EXTENSION_ROLES);
             List<String> listRoles = (roles == null) ? new ArrayList<String>() : Arrays.asList(roles);
             ScopeFactory scopeFactory = new ScopeFactory(listRoles);
-            if (progressIndicator.getValue() >= 1) {
-                if (isAllowedToShowScope(listRoles)) {
-                    boolean failed = false;
-                    try {
-                        InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
-                        if (InstanceState.STOPPED.equals(instance.getState())) {
-                            failed = true;
-                        }
-                        scopeFactory.setInstance(instance);
-                    } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
-                        LOGGER.error(e.getMessage(), e);
+            if (progressIndicator.getValue() >= 1 && isAllowedToShowScope(listRoles)) {
+                boolean failed = false;
+                try {
+                    InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
+                    if (InstanceState.STOPPED.equals(instance.getState())) {
                         failed = true;
                     }
-                    if (failed) {
-                        String error = "Fail to add a scope for main UI. Please see logs";
-                        if (notifierService != null) {
-                            notifierService.addNotification(error);
-                        }
+                    scopeFactory.setInstance(instance);
+                } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
+                    LOGGER.error(e.getMessage(), e);
+                    failed = true;
+                }
+                if (failed) {
+                    String error = "Fail to add a scope for main UI. Please see logs";
+                    if (notifierService != null) {
+                        notifierService.addNotification(error);
                     }
                 }
             }
@@ -346,7 +347,7 @@ public class BaseUI extends UI implements Serializable {
         loginPanel.addStyleName("login-panel");
 
         HorizontalLayout labels = new HorizontalLayout();
-        labels.setWidth("100%");
+        labels.setWidth(MAX_WIDTH);
         labels.setMargin(true);
         loginPanel.addComponent(labels);
 
@@ -394,7 +395,7 @@ public class BaseUI extends UI implements Serializable {
         loginPanel.addComponent(fields);
 
         HorizontalLayout bottomRow = new HorizontalLayout();
-        bottomRow.setWidth("100%");
+        bottomRow.setWidth(MAX_WIDTH);
         bottomRow.setMargin(new MarginInfo(false, true, false, true));
         final CheckBox keepLoggedIn = new CheckBox("Keep me logged in");
         bottomRow.addComponent(keepLoggedIn);
@@ -521,7 +522,7 @@ public class BaseUI extends UI implements Serializable {
         buildProgressIndicatorView();
 
         menu.addStyleName("menu");
-        menu.setHeight("100%");
+        menu.setHeight(MAX_HEIGHT);
 
         navigateToPageLocation();
     }
@@ -578,7 +579,7 @@ public class BaseUI extends UI implements Serializable {
         progressPanel.addStyleName("login-panel");
 
         HorizontalLayout labels = new HorizontalLayout();
-        labels.setWidth("100%");
+        labels.setWidth(MAX_WIDTH);
         labels.setMargin(true);
         progressPanel.addComponent(labels);
 
@@ -619,7 +620,7 @@ public class BaseUI extends UI implements Serializable {
         }
 
         HorizontalLayout progressBarPanel = new HorizontalLayout();
-        progressBarPanel.setWidth("100%");
+        progressBarPanel.setWidth(MAX_WIDTH);
         progressBarPanel.setMargin(true);
         progressBarPanel.addComponent(progressIndicator);
         progressBarPanel.setComponentAlignment(progressIndicator, Alignment.MIDDLE_CENTER);
@@ -743,7 +744,7 @@ public class BaseUI extends UI implements Serializable {
     }
 
     @Override
-    public void accessSynchronously(Runnable runnable) throws UIDetachedException {
+    public void accessSynchronously(Runnable runnable) {
         Map<Class<?>, CurrentInstance> old = null;
 
         VaadinSession session = getSession();
@@ -809,7 +810,7 @@ public class BaseUI extends UI implements Serializable {
         public SidebarView() {
             addStyleName("sidebar");
             setWidth(null);
-            setHeight("100%");
+            setHeight(MAX_HEIGHT);
 
             // Branding element
             addComponent(new CssLayout() {
@@ -898,7 +899,7 @@ public class BaseUI extends UI implements Serializable {
         private ConsoleContentView(final Button notify, final HorizontalLayout tasksBar) {
             setSizeFull();
             HorizontalLayout toolbar = new HorizontalLayout();
-            toolbar.setWidth("100%");
+            toolbar.setWidth(MAX_WIDTH);
             toolbar.setSpacing(true);
             toolbar.addStyleName("toolbar");
             toolbar.addComponent(tasksBar);

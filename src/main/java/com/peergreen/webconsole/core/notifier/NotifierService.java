@@ -488,34 +488,4 @@ public class NotifierService implements InternalNotifierService, Serializable {
             }
         }
     }
-
-    /**
-     * @author Mohammed Boukada
-     */
-    private class CleanupThread extends Thread {
-
-        private static final int TWO_SECONDS = 2000;
-
-        @Override
-        public void run() {
-            try {
-                Thread.sleep(TWO_SECONDS);
-                for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
-                    UI ui = taskBar.getKey();
-                    if (ui.isClosing()) {
-                        clearComponentsForUI(ui);
-                    } else {
-                        ui.access(new Runnable() {
-                            @Override
-                            public void run() {
-                                taskBar.getValue().removeAllComponents();
-                            }
-                        });
-                    }
-                }
-            } catch (InterruptedException e) {
-                // do nothing
-            }
-        }
-    }
 }
