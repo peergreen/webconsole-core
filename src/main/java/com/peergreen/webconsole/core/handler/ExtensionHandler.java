@@ -41,6 +41,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -255,6 +257,28 @@ public class ExtensionHandler extends DependencyHandler {
             specifications.addAll(getSpecifications(clazz.getSuperclass()));
         }
         return specifications;
+    }
+
+    /**
+     * Get Validate / Invalidate methods
+     * @param clazz class
+     * @return validation methods
+     */
+    protected Map<InstanceState, Method> getValidationMethods(Class<?> clazz) {
+        Map<InstanceState, Method> methods = new HashMap<>();
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(PostConstruct.class) && method.getParameterTypes().length == 0) {
+                methods.put(InstanceState.VALID, method);
+            } else if (method.isAnnotationPresent(PreDestroy.class) && method.getParameterTypes().length == 0) {
+                methods.put(InstanceState.INVALID, method);
+            }
+        }
+
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && !Object.class.equals(superClass) && !superClass.getName().startsWith(VAADIN_PACKAGE_PREFIX)) {
+            methods.putAll(getValidationMethods(superClass));
+        }
+        return methods;
     }
 
     /**
@@ -474,52 +498,6 @@ public class ExtensionHandler extends DependencyHandler {
         typeDesc.addProperty(new PropertyDescription(WEBCONSOLE_EXTENSION, "java.lang.String", "true", true));
     }
 
-    /**
-     * Extension instance state listener. Register extension's specifications
-     * @author Mohammed Boukada
-     */
-    public class ExtensionInstanceStateListener implements InstanceStateListener {
-
-        private String[] specifications;
-        private Dictionary<String, ?> configuration;
-        private ServiceRegistration serviceRegistration;
-
-        public ExtensionInstanceStateListener(Dictionary<String, ?> configuration) {
-            List<String> listSpecifications = getSpecifications(extensionType);
-            this.specifications = listSpecifications.toArray(new String[listSpecifications.size()]);
-            this.configuration = configuration;
-        }
-
-        @Override
-        public void stateChanged(ComponentInstance instance, int newState) {
-            BundleContext bc = ownInstanceManager.getBundleContext();
-
-            if (!SecurityHelper.hasPermissionToRegisterServices(specifications, bc)) {
-                throw new SecurityException(
-                        format("The bundle %d does not have the permission to register the services %s",
-                                bc.getBundle().getBundleId(),
-                                Arrays.asList(specifications)));
-            } else {
-                switch (newState) {
-                    case ComponentInstance.VALID :
-                        if (specifications.length >= 1) {
-                            serviceRegistration =
-                                    bc.registerService(specifications, getInstanceManager().getPojoObject(), configuration);
-                        }
-                        break;
-                    case ComponentInstance.INVALID :
-                    case ComponentInstance.DISPOSED :
-                    case ComponentInstance.STOPPED :
-                        if (serviceRegistration != null) {
-                            serviceRegistration.unregister();
-                            serviceRegistration = null;
-                        }
-                        break;
-                }
-            }
-        }
-    }
-
     @Override
     protected DependencyCallback createDependencyHandler(Dependency dep, String method, int type) {
         LinkDependencyCallback linkDependencyCallback = new LinkDependencyCallback(dep, method, type, uiContext.getUI(), notifierService);
@@ -544,6 +522,75 @@ public class ExtensionHandler extends DependencyHandler {
         this.notifierService = null;
         for (LinkDependencyCallback dependencyCallback : dependencyCallbacks) {
             dependencyCallback.setNotifierService(null);
+        }
+    }
+
+    /**
+     * Extension instance state listener. Register extension's specifications
+     * @author Mohammed Boukada
+     */
+    public class ExtensionInstanceStateListener implements InstanceStateListener {
+
+        private String[] specifications;
+        private Dictionary<String, ?> configuration;
+        private ServiceRegistration serviceRegistration;
+        private List<Method> validateCallbacks = new ArrayList<>();
+        private List<Method> invalidateCallbacks = new ArrayList<>();
+
+        public ExtensionInstanceStateListener(Dictionary<String, ?> configuration) {
+            List<String> listSpecifications = getSpecifications(extensionType);
+            for (Map.Entry<InstanceState, Method> callback : getValidationMethods(extensionType).entrySet()) {
+                if (InstanceState.VALID.equals(callback.getKey())) {
+                    validateCallbacks.add(callback.getValue());
+                } else if (InstanceState.INVALID.equals(callback.getKey())) {
+                    invalidateCallbacks.add(callback.getValue());
+                }
+            }
+            this.specifications = listSpecifications.toArray(new String[listSpecifications.size()]);
+            this.configuration = configuration;
+        }
+
+        @Override
+        public void stateChanged(ComponentInstance instance, int newState) {
+            BundleContext bc = ownInstanceManager.getBundleContext();
+
+            if (!SecurityHelper.hasPermissionToRegisterServices(specifications, bc)) {
+                throw new SecurityException(
+                        format("The bundle %d does not have the permission to register the services %s",
+                                bc.getBundle().getBundleId(),
+                                Arrays.asList(specifications)));
+            } else {
+                switch (newState) {
+                    case ComponentInstance.VALID :
+                        for (Method method : validateCallbacks) {
+                            try {
+                                method.invoke(ownInstanceManager.getPojoObject());
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                LOGGER.error("Fail to call ''{0}''", method.getName(), e);
+                            }
+                        }
+                        if (specifications.length >= 1) {
+                            serviceRegistration =
+                                    bc.registerService(specifications, getInstanceManager().getPojoObject(), configuration);
+                        }
+                        break;
+                    case ComponentInstance.INVALID :
+                    case ComponentInstance.DISPOSED :
+                    case ComponentInstance.STOPPED :
+                        if (serviceRegistration != null) {
+                            serviceRegistration.unregister();
+                            serviceRegistration = null;
+                        }
+                        for (Method method : invalidateCallbacks) {
+                            try {
+                                method.invoke(ownInstanceManager.getPojoObject());
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                LOGGER.error("Fail to call ''{0}''", method.getName(), e);
+                            }
+                        }
+                        break;
+                }
+            }
         }
     }
 
