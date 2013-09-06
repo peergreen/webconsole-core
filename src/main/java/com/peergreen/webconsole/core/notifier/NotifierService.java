@@ -1,6 +1,6 @@
 package com.peergreen.webconsole.core.notifier;
 
-import com.peergreen.webconsole.NotificationOverlay;
+import com.peergreen.webconsole.HelpOverlay;
 import com.peergreen.webconsole.core.notifier.utils.Notification;
 import com.peergreen.webconsole.core.notifier.utils.NotificationButton;
 import com.peergreen.webconsole.core.notifier.utils.ScopeButton;
@@ -39,7 +39,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private List<NotificationOverlay> overlays = new ArrayList<>();
+    private List<HelpOverlay> overlays = new ArrayList<>();
     private Map<com.vaadin.ui.Component, ScopeButton> scopesButtons = new ConcurrentHashMap<>();
     private Map<UI, NotificationButton> notificationButtons = new ConcurrentHashMap<>();
     private Map<UI, HorizontalLayout> tasksBars = new ConcurrentHashMap<>();
@@ -51,7 +51,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
      * Close all overlays
      */
     public void closeAll() {
-        for (NotificationOverlay overlay : overlays) {
+        for (HelpOverlay overlay : overlays) {
             overlay.close();
         }
         overlays.clear();
@@ -205,11 +205,11 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
-    public NotificationOverlay addOverlay(String caption, String text, String style) {
-        NotificationOverlay o = new NotificationOverlay();
+    public HelpOverlay createHelpOverlay(String caption, String text) {
+        HelpOverlay o = new HelpOverlay();
         o.setCaption(caption);
         o.addComponent(new Label(text, ContentMode.HTML));
-        o.setStyleName(style);
+        o.setStyleName("login");
         overlays.add(o);
         return o;
     }
