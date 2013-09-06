@@ -76,11 +76,12 @@ public class ExtensionHandler extends DependencyHandler {
      */
     private static final Log LOGGER = LogFactory.getLog(ExtensionHandler.class);
 
+    private static final String VAADIN_PACKAGE_PREFIX = "com.vaadin.";
+
     private Class<?> extensionType;
     private UIContext uiContext;
     private InstanceManager ownInstanceManager = new OwnInstanceManager();
     private InternalNotifierService notifierService;
-    private List<Field> fieldsToBind;
     private List<LinkDependencyCallback> dependencyCallbacks = new ArrayList<>();
     private List<String> notifications = new LinkedList<>();
     private Map<String, ExtensionPointModel> bindings;
@@ -107,12 +108,11 @@ public class ExtensionHandler extends DependencyHandler {
         setExtensionType();
         setExtensionProperties(configuration);
         setExtensionNavigationModel(configuration);
-        bindInjections();
 
         // Add instance state listener to (un)register component specifications as services
         ownInstanceManager.addInstanceStateListener(new ExtensionInstanceStateListener(configuration));
 
-        super.configure(createBindings(metadata), configuration);
+        super.configure(createBindings(metadata, getFieldsToBind(extensionType), getMethodsToBind(extensionType)), configuration);
     }
 
     /**
@@ -197,47 +197,92 @@ public class ExtensionHandler extends DependencyHandler {
     }
 
     /**
-     * Bind field annotated by {@link com.peergreen.webconsole.Inject} <br />
+     * Get field annotated by {@link com.peergreen.webconsole.Inject} <br />
      *
      * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
      * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
      * fields type are directly injected.
      *
-     * @return List of fields to bind
-     * @throws ConfigurationException
+     * @param clazz class
+     * @return list of fields to bind
      */
-    protected List<Field> bindInjections() throws ConfigurationException {
-        fieldsToBind = new ArrayList<>();
-        Field[] fields = extensionType.getDeclaredFields();
-        for (Field field : fields) {
+    protected List<Field> getFieldsToBind(Class<?> clazz) {
+        List<Field> fieldsToBind = new ArrayList<>();
+        for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(Inject.class)) {
                 Class<?> type = field.getType();
-                Object pojo = ownInstanceManager.getPojoObject();
-                Object fieldValue = null;
-
-                if (type.equals(BundleContext.class)) {
-                    fieldValue = ownInstanceManager.getBundleContext();
-                } else if (type.equals(ISecurityManager.class)) {
-                    fieldValue = uiContext.getSecurityManager();
-                } else if (type.equals(ViewNavigator.class)) {
-                    fieldValue = uiContext.getViewNavigator();
-                } else if (type.equals(UIContext.class)) {
-                    fieldValue = uiContext;
-                }
+                Object fieldValue = getFieldValue(type);
 
                 try {
                     if (fieldValue != null) {
                         field.setAccessible(true);
-                        field.set(pojo, fieldValue);
+                        field.set(ownInstanceManager.getPojoObject(), fieldValue);
                     } else {
                         fieldsToBind.add(field);
                     }
                 } catch (IllegalAccessException e) {
-                    throw new ConfigurationException(format("Fail to set the field '%s' type of '%s'", field.getName(), field.getType().getName()), e);
+                    LOGGER.error("Fail to set the field ''{0}'' type of ''{1}''", field.getName(), field.getType().getName(), e);
                 }
             }
         }
+
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && !Object.class.equals(superClass) && !superClass.getName().startsWith(VAADIN_PACKAGE_PREFIX)) {
+            fieldsToBind.addAll(getFieldsToBind(superClass));
+        }
         return fieldsToBind;
+    }
+
+    /**
+     * Get methods annotated by {@link com.peergreen.webconsole.Inject} <br />
+     *
+     * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
+     * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
+     * fields type are directly injected. <br />
+     *
+     * Methods annotated by {@link javax.annotation.PostConstruct} and {@link javax.annotation.PreDestroy} are called
+     * when this component is valide/invalide.
+     *
+     * @param clazz class
+     * @return list of methods to bind
+     */
+    protected List<Method> getMethodsToBind(Class<?> clazz) {
+        List<Method> methodsToBind = new ArrayList<>();
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Inject.class) && method.getParameterTypes().length == 1) {
+                Class<?> spec = method.getParameterTypes()[0];
+                if (!spec.equals(BundleContext.class) && !spec.equals(ISecurityManager.class)
+                        && !spec.equals(ViewNavigator.class) && !spec.equals(UIContext.class)) {
+                    methodsToBind.add(method);
+                } else {
+                    try {
+                        method.invoke(ownInstanceManager.getPojoObject(), getFieldValue(spec));
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        LOGGER.error("Fail to call " + method.getName(), e);
+                    }
+                }
+            }
+        }
+
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && !Object.class.equals(superClass) && !superClass.getName().startsWith(VAADIN_PACKAGE_PREFIX)) {
+            methodsToBind.addAll(getMethodsToBind(superClass));
+        }
+        return methodsToBind;
+    }
+
+    private Object getFieldValue(Class<?> type) {
+        if (type.equals(BundleContext.class)) {
+            return ownInstanceManager.getBundleContext();
+        } else if (type.equals(ISecurityManager.class)) {
+            return uiContext.getSecurityManager();
+        } else if (type.equals(ViewNavigator.class)) {
+            return uiContext.getViewNavigator();
+        } else if (type.equals(UIContext.class)) {
+            return uiContext;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -312,7 +357,7 @@ public class ExtensionHandler extends DependencyHandler {
      * @return metadata updated
      * @throws ConfigurationException
      */
-    protected Element createBindings(Element metadata) throws ConfigurationException {
+    protected Element createBindings(Element metadata, List<Field> fieldsToBind, List<Method> methodsToBind) throws ConfigurationException {
         bindings = new HashMap<>();
 
         Element newMetadata = new Element("component", null);
@@ -325,9 +370,10 @@ public class ExtensionHandler extends DependencyHandler {
             newMetadata.addAttribute(attribute);
         }
 
-        getCallbackMethods();
+        getCallbackMethods(extensionType);
         addCallbackMethodsToMetadata(newMetadata);
-        addRequiredFieldsToMetadata(newMetadata);
+        addRequiredFieldsToMetadata(fieldsToBind, newMetadata);
+        addInjectMethodsCallbackToMetadata(methodsToBind, newMetadata);
         return newMetadata;
     }
 
@@ -335,9 +381,8 @@ public class ExtensionHandler extends DependencyHandler {
      * Methods annotated by {@link com.peergreen.webconsole.Link} and {@link com.peergreen.webconsole.Unlink}
      * will be called when a specification matches the filter.
      */
-    private void getCallbackMethods() {
-        Method[] methods = extensionType.getDeclaredMethods();
-        for (Method method : methods) {
+    private void getCallbackMethods(Class<?> clazz) {
+        for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Link.class)) {
                 Link link = method.getAnnotation(Link.class);
                 String extensionName = link.value();
@@ -376,6 +421,11 @@ public class ExtensionHandler extends DependencyHandler {
                 }
             }
         }
+
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && !Object.class.equals(superClass) && !superClass.getName().startsWith(VAADIN_PACKAGE_PREFIX)) {
+            getCallbackMethods(superClass);
+        }
     }
 
     /**
@@ -394,6 +444,7 @@ public class ExtensionHandler extends DependencyHandler {
             requires.addAttribute(new Attribute("optional", "true"));
             requires.addAttribute(new Attribute("aggregate", "true"));
             requires.addAttribute(new Attribute("id", extensionPointId));
+            requires.addAttribute(new Attribute("specification", extensionPointModel.getBindMethod().getParameterTypes()[0].getName()));
 
             if (extensionPointModel.getBindMethod() != null) {
                 Element bindCallback = new Element("callback", null);
@@ -416,11 +467,28 @@ public class ExtensionHandler extends DependencyHandler {
      * Add required fields to metadata
      * @param metadata metadata
      */
-    private void addRequiredFieldsToMetadata(Element metadata) {
+    private void addRequiredFieldsToMetadata(List<Field> fieldsToBind, Element metadata) {
         for (Field field : fieldsToBind) {
             Element requires = new Element("requires", null);
             requires.addAttribute(new Attribute("field", field.getName()));
             requires.addAttribute(new Attribute("filter", String.format("(|(%s=%s)(!(%s=*)))", UI_ID, uiContext.getUIId(), UI_ID)));
+            metadata.addElement(requires);
+        }
+    }
+
+    private void addInjectMethodsCallbackToMetadata(List<Method> methodsToBind, Element metadata) {
+        for (Method method : methodsToBind) {
+            Element requires = new Element("requires", null);
+            requires.addAttribute(new Attribute("optional", "false"));
+            requires.addAttribute(new Attribute("aggregate", "false"));
+            requires.addAttribute(new Attribute("id", method.getName()));
+            requires.addAttribute(new Attribute("specification", method.getParameterTypes()[0].getName()));
+
+            Element bindCallback = new Element("callback", null);
+            bindCallback.addAttribute(new Attribute("method", method.getName()));
+            bindCallback.addAttribute(new Attribute("type", "bind"));
+            requires.addElement(bindCallback);
+
             metadata.addElement(requires);
         }
     }

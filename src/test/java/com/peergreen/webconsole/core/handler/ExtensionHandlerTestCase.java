@@ -4,6 +4,7 @@ import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.UIContext;
 import com.peergreen.webconsole.core.handler.extensions.ExtensionExample;
+import com.peergreen.webconsole.core.handler.extensions.ExtensionExtendsProvider;
 import com.peergreen.webconsole.core.handler.extensions.ExtensionPointProvider;
 import com.peergreen.webconsole.core.handler.extensions.TestInterface;
 import com.vaadin.ui.Button;
@@ -18,6 +19,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -55,11 +58,30 @@ public class ExtensionHandlerTestCase {
         extensionHandler.setUiContext(uiContext);
         extensionHandler.setExtensionType();
 
-        List<Field> fieldsToBind = extensionHandler.bindInjections();
+        List<Field> fieldsToBind = extensionHandler.getFieldsToBind(extensionPointProvider.getClass());
         Assert.assertTrue(fieldsToBind.contains(extensionPointProvider.getClass().getDeclaredField("notifierService")), "Notifier Service must be added to fields to Bind   ");
         Assert.assertEquals(extensionPointProvider.getBundleContext(), bundleContext, "Wrong bundle context injected");
         Assert.assertEquals(extensionPointProvider.getSecurityManager(), securityManager, "Wrong security manager injected");
         Assert.assertEquals(extensionPointProvider.getUiContext(), uiContext, "Wrong UI Context injected");
+    }
+
+    @Test
+    public void testBindInjectionsInSuperClass() throws ConfigurationException, NoSuchFieldException {
+        ExtensionExtendsProvider extensionExtendsProvider = new ExtensionExtendsProvider();
+        when(uiContext.getSecurityManager()).thenReturn(securityManager);
+        when(instanceManager.getPojoObject()).thenReturn(extensionExtendsProvider);
+        when(instanceManager.getBundleContext()).thenReturn(bundleContext);
+
+        ExtensionHandler extensionHandler = new ExtensionHandler();
+        extensionHandler.setOwnInstanceManager(instanceManager);
+        extensionHandler.setUiContext(uiContext);
+        extensionHandler.setExtensionType();
+
+        List<Field> fieldsToBind = extensionHandler.getFieldsToBind(extensionExtendsProvider.getClass());
+        Assert.assertTrue(fieldsToBind.contains(extensionExtendsProvider.getClass().getSuperclass().getDeclaredField("notifierService")), "Notifier Service must be added to fields to Bind   ");
+        Assert.assertEquals(extensionExtendsProvider.getBundleContext(), bundleContext, "Wrong bundle context injected");
+        Assert.assertEquals(extensionExtendsProvider.getSecurityManager(), securityManager, "Wrong security manager injected");
+        Assert.assertEquals(extensionExtendsProvider.getUiContext(), uiContext, "Wrong UI Context injected");
     }
 
     @Test
@@ -95,8 +117,8 @@ public class ExtensionHandlerTestCase {
         extensionHandler.setUiContext(uiContext);
 
         Element oldMetadata = new Element("component", null);
-        extensionHandler.bindInjections();
-        Element newMetadata = extensionHandler.createBindings(oldMetadata);
+        List<Field> fieldsToBind = extensionHandler.getFieldsToBind(extensionPointProvider.getClass());
+        Element newMetadata = extensionHandler.createBindings(oldMetadata, fieldsToBind, new ArrayList<Method>());
 
         Assert.assertTrue(newMetadata.containsElement("requires"), "Requires missing");
         Assert.assertTrue(newMetadata.getElements("requires").length == 3, "Requires must contains 3 requirement");
