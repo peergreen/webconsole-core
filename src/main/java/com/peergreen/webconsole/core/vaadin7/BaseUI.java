@@ -30,6 +30,7 @@ import com.vaadin.server.VaadinService;
 import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CheckBox;
@@ -83,7 +84,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @PreserveOnRefresh
 @org.apache.felix.ipojo.annotations.Component
 @Provides(specifications = UI.class)
-@Push
+@Push(transport = Transport.STREAMING)
 public class BaseUI extends UI implements Serializable {
 
     private static final long serialVersionUID = 1L;
