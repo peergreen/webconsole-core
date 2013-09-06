@@ -28,33 +28,15 @@
     </dependency>
     <dependency>
       <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-client</artifactId>
-      <scope>provided</scope>
-      <version>${vaadin.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
       <artifactId>vaadin-client-compiled</artifactId>
       <scope>provided</scope>
       <version>${vaadin.version}</version>
     </dependency>
     <dependency>
       <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-shared</artifactId>
-      <scope>provided</scope>
-      <version>${vaadin.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
       <artifactId>vaadin-push</artifactId>
-      <scope>provided</scope>
       <version>${vaadin.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-shared-deps</artifactId>
-      <scope>provided</scope>
-      <version>1.0.2</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.ow2.spec.ee</groupId>
@@ -81,12 +63,6 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.peergreen.resolver</groupId>
-      <artifactId>org.apache.felix.resolver</artifactId>
-      <version>0.1.0.r20130402</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo.annotations</artifactId>
       <version>${ipojo.version}</version>
@@ -96,12 +72,6 @@
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.ipojo</artifactId>
       <version>${ipojo.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>5.0.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
