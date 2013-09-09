@@ -5,6 +5,7 @@ import com.vaadin.ui.UI;
 
 /**
  * Scope button descriptor
+ *
  * @author Mohammed Boukada
  */
 public class ScopeButton {
@@ -25,9 +26,10 @@ public class ScopeButton {
 
     /**
      * Create a scope button descriptor
-     * @param button vaadin button
+     *
+     * @param button   vaadin button
      * @param buttonUi vaadin UI (where button is attached)
-     * @param badge badge value
+     * @param badge    badge value
      */
     public ScopeButton(Button button, UI buttonUi, int badge) {
         this.button = button;
@@ -37,6 +39,7 @@ public class ScopeButton {
 
     /**
      * Get scope button
+     *
      * @return scope button
      */
     public Button getButton() {
@@ -45,6 +48,7 @@ public class ScopeButton {
 
     /**
      * Get scope button UI
+     *
      * @return UI
      */
     public UI getButtonUi() {
@@ -53,6 +57,7 @@ public class ScopeButton {
 
     /**
      * Get scope badge
+     *
      * @return badge value
      */
     public int getBadge() {
@@ -61,6 +66,7 @@ public class ScopeButton {
 
     /**
      * Set scope badge
+     *
      * @param badge new badge value
      */
     public void setBadge(int badge) {

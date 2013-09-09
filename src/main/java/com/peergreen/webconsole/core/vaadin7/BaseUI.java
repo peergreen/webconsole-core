@@ -50,6 +50,7 @@ import com.vaadin.ui.UIDetachedException;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.util.CurrentInstance;
+
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.MissingHandlerException;
 import org.apache.felix.ipojo.UnacceptableConfiguration;
@@ -78,6 +79,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Base console UI
+ *
  * @author Mohammed Boukada
  */
 @Theme("dashboard")
@@ -147,7 +149,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * SecuredConsole name
-      */
+     */
     private String consoleName;
     private Boolean enableSecurity;
     private List<String> defaultRoles;
@@ -210,6 +212,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Bind a scope factory
+     *
      * @param extensionFactory
      */
     @Bind(aggregate = true, optional = true)
@@ -244,6 +247,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Unbind a scope factory
+     *
      * @param extensionFactory
      */
     @Unbind
@@ -283,6 +287,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Init UI
+     *
      * @param request
      */
     @Override
@@ -299,7 +304,7 @@ public class BaseUI extends UI implements Serializable {
         root.addComponent(bg);
 
         Boolean isLogged = (Boolean) getSession().getAttribute("is.logged");
-        if(!enableSecurity || (isLogged != null && isLogged)) {
+        if (!enableSecurity || (isLogged != null && isLogged)) {
             securityManager = (ISecurityManager) getSession().getAttribute("security.manager");
             if (securityManager == null) {
                 Subject defaultSubject = new Subject();
@@ -328,6 +333,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Build login view
+     *
      * @param exit
      */
     private void buildLoginView(final boolean exit) {
@@ -434,9 +440,8 @@ public class BaseUI extends UI implements Serializable {
 //                    }
 
                     buildMainView();
-                }
-                else {
-                     error.setVisible(true);
+                } else {
+                    error.setVisible(true);
                 }
             }
         });
@@ -530,6 +535,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Create scopes views
+     *
      * @param scopesToBind scope to bound
      */
     private void createScopeViews(Map<ExtensionFactory, ScopeFactory> scopesToBind) {
@@ -584,7 +590,7 @@ public class BaseUI extends UI implements Serializable {
         labels.setMargin(true);
         progressPanel.addComponent(labels);
 
-        Label welcome = new Label("Welcome " + ((securityManager == null)? "":securityManager.getUserName()));
+        Label welcome = new Label("Welcome " + ((securityManager == null) ? "" : securityManager.getUserName()));
         welcome.addStyleName("h4");
         labels.addComponent(welcome);
         labels.setComponentAlignment(welcome, Alignment.MIDDLE_LEFT);
@@ -601,7 +607,7 @@ public class BaseUI extends UI implements Serializable {
         if (scopesFactories.isEmpty()) {
             progressIndicator.setValue(stopValue);
         } else {
-            progressIndicator.setValue(scopesViewsBound/ nbScopesToBind);
+            progressIndicator.setValue(scopesViewsBound / nbScopesToBind);
         }
 
         if (stopValue.equals(progressIndicator.getValue())) {
@@ -639,6 +645,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Format console title
+     *
      * @param title
      * @return
      */
@@ -656,6 +663,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Add scope button in menu
+     *
      * @param scope
      * @param notify for notifierService to show badge
      */
@@ -690,6 +698,7 @@ public class BaseUI extends UI implements Serializable {
 
     /**
      * Remove scope button from menu
+     *
      * @param scope
      */
     private void removeScopeButtonInMenu(final Scope scope) {

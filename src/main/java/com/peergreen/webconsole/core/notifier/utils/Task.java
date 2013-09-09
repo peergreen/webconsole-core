@@ -17,6 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Task descriptor
+ *
  * @author Mohammed Boukada
  */
 public class Task {
@@ -42,8 +43,9 @@ public class Task {
 
     /**
      * Create a task descriptor
-     * @param worker task worker
-     * @param message task message
+     *
+     * @param worker        task worker
+     * @param message       task message
      * @param contentLength task length
      */
     public Task(Object worker, String message, Long contentLength) {
@@ -54,6 +56,7 @@ public class Task {
 
     /**
      * Get task message
+     *
      * @return task message
      */
     public String getMessage() {
@@ -62,6 +65,7 @@ public class Task {
 
     /**
      * Get task worker
+     *
      * @return task worker
      */
     public Object getWorker() {
@@ -70,6 +74,7 @@ public class Task {
 
     /**
      * Update task descriptor
+     *
      * @param bytesReceived bytes received
      */
     public void updateTask(Long bytesReceived) {
@@ -80,6 +85,7 @@ public class Task {
 
     /**
      * Add task progress indicator
+     *
      * @param progressIndicator progress indicator
      */
     public void addProgressIndicator(ProgressIndicator progressIndicator) {

@@ -6,6 +6,7 @@ import com.vaadin.server.UIClassSelectionEvent;
 import com.vaadin.server.UICreateEvent;
 import com.vaadin.server.UIProvider;
 import com.vaadin.ui.UI;
+
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
@@ -30,6 +31,7 @@ import static com.peergreen.webconsole.Constants.UI_ID;
 
 /**
  * Vaadin Base console UI provider
+ *
  * @author Mohammed Boukada
  */
 @Component
@@ -58,6 +60,7 @@ public class BaseUIProvider extends UIProvider {
 
     /**
      * Set console
+     *
      * @param consoleName
      */
     public void setConsoleName(String consoleName) {
@@ -76,14 +79,16 @@ public class BaseUIProvider extends UIProvider {
         this.defaultRoles = defaultRoles;
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     @Override
     public Class<? extends UI> getUIClass(UIClassSelectionEvent event) {
         return BaseUI.class;
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     @Override
     public UI createInstance(final UICreateEvent e) {

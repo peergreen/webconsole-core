@@ -4,6 +4,7 @@ import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.resource.CssHandle;
 import com.peergreen.webconsole.resource.CssInjectorService;
 import com.vaadin.ui.UI;
+
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -26,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Css contribution service implementation
+ *
  * @author Mohammed Boukada
  */
 @Component
@@ -98,7 +100,8 @@ public class BaseCssInjectorService implements CssInjectorService {
 
     /**
      * Update style for UIs
-     * @param uis list of UIs
+     *
+     * @param uis        list of UIs
      * @param cssHandles list of css contributions
      */
     private void updateStyle(List<UI> uis, List<CssHandle> cssHandles) {

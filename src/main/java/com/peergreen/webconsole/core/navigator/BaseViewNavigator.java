@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Vaadin view navigator implementation
+ *
  * @author Mohammed Boukada
  */
 public class BaseViewNavigator implements ViewNavigator {
@@ -34,7 +35,8 @@ public class BaseViewNavigator implements ViewNavigator {
 
     /**
      * Create new view navigator
-     * @param nav Vaadin navigator
+     *
+     * @param nav                Vaadin navigator
      * @param rootNavigableModel root (UI) navigable model
      */
     public BaseViewNavigator(Navigator nav, NavigableModel rootNavigableModel) {
@@ -68,6 +70,7 @@ public class BaseViewNavigator implements ViewNavigator {
      * Navigate to the given path by calling all callback methods annotated by
      * {@link com.peergreen.webconsole.navigator.Navigate} of each {@link com.peergreen.webconsole.navigator.NavigableModel}
      * through the path.
+     *
      * @param path path to extension
      */
     public void navigate(String path) {
@@ -82,8 +85,7 @@ public class BaseViewNavigator implements ViewNavigator {
 
         if (navigableModel == null) {
             notifierService.addNotification(String.format("Cannot navigate to '%s'", path));
-        }
-        else {
+        } else {
             BaseNavigationContext context = new BaseNavigationContext(UrlFragment.subFirstFragment(path));
             try {
                 Method callbackMethod = navigableModel.getCallbackMethod();
@@ -106,6 +108,7 @@ public class BaseViewNavigator implements ViewNavigator {
 
     /**
      * Add scope alias to navigator
+     *
      * @param scope given scope
      */
     public void addRoute(Scope scope) {
@@ -127,6 +130,7 @@ public class BaseViewNavigator implements ViewNavigator {
 
     /**
      * Remove scope alias from navigator
+     *
      * @param scope given scope
      */
     public void removeRoute(Scope scope) {
@@ -184,6 +188,7 @@ public class BaseViewNavigator implements ViewNavigator {
 
     /**
      * Test event given extension id matches extension className.
+     *
      * @param extension extension id. <br/>
      *                  This parameter could be the extension class name or one of its own extension point.
      * @param className className
@@ -195,13 +200,14 @@ public class BaseViewNavigator implements ViewNavigator {
 
     /**
      * View change listener.
+     *
      * @author Mohammed Boukada
      */
     public class NavigatorViewChangeListener implements ViewChangeListener {
 
         /**
          * {@inheritDoc} <br />
-         *
+         * <p/>
          * Navigate to the next view.
          * Remove style from the previous.
          * Update context.
@@ -220,7 +226,7 @@ public class BaseViewNavigator implements ViewNavigator {
 
         /**
          * {@inheritDoc} <br />
-         *
+         * <p/>
          * Update style for the selected view
          */
         @Override

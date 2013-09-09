@@ -10,6 +10,7 @@ import com.vaadin.ui.VerticalLayout;
 
 /**
  * Exception view
+ *
  * @author Mohammed Boukada
  */
 public class ExceptionView extends VerticalLayout {
@@ -50,9 +51,9 @@ public class ExceptionView extends VerticalLayout {
         t.setSizeFull();
 
         int i = 1;
-        t.addItem(new Object[] {ex.toString()}, i++);
+        t.addItem(new Object[]{ex.toString()}, i++);
         for (StackTraceElement element : ex.getStackTrace()) {
-            t.addItem(new Object[] {element.toString()}, i++);
+            t.addItem(new Object[]{element.toString()}, i++);
         }
         CssLayout panel = new CssLayout();
         panel.addStyleName("layout-panel");

@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 /**
  * Defines an extension point
+ *
  * @author Mohammed Boukada
  */
 public class ExtensionPointModel {
@@ -13,9 +14,10 @@ public class ExtensionPointModel {
 
     /**
      * Create an extension point model
-     * @param bindMethod callback bind method
+     *
+     * @param bindMethod   callback bind method
      * @param unbindMethod callback unbind method
-     * @param filter binding filter
+     * @param filter       binding filter
      */
     public ExtensionPointModel(Method bindMethod, Method unbindMethod, String filter) {
         this.bindMethod = bindMethod;
@@ -25,6 +27,7 @@ public class ExtensionPointModel {
 
     /**
      * Get bind method to callback
+     *
      * @return bind method
      */
     public Method getBindMethod() {
@@ -33,6 +36,7 @@ public class ExtensionPointModel {
 
     /**
      * Get unbind method to callback
+     *
      * @return unbind method
      */
     public Method getUnbindMethod() {
@@ -41,6 +45,7 @@ public class ExtensionPointModel {
 
     /**
      * Get bindings filter
+     *
      * @return filter
      */
     public String getFilter() {
@@ -49,6 +54,7 @@ public class ExtensionPointModel {
 
     /**
      * Set unbind method to callback
+     *
      * @param unbindMethod unbind method
      */
     public void setUnbindMethod(Method unbindMethod) {
@@ -57,6 +63,7 @@ public class ExtensionPointModel {
 
     /**
      * Set bind method to callback
+     *
      * @param bindMethod bind method
      */
     public void setBindMethod(Method bindMethod) {

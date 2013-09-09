@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * Web Console security manager implementation
+ *
  * @author Mohammed Boukada
  */
 public class SecurityManager implements ISecurityManager {

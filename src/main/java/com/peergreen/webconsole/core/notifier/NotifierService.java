@@ -13,6 +13,7 @@ import com.vaadin.ui.ProgressIndicator;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Notifier service implementation
+ *
  * @author Mohammed Boukada
  */
 @Component
@@ -158,6 +160,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Get task
+     *
      * @param worker task worker
      * @return task descriptor
      */
@@ -172,6 +175,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Remove task
+     *
      * @param worker task worker
      */
     private void removeTask(Object worker) {
@@ -256,7 +260,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
         tasksBars.put(ui, tasksBar);
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     public void hideScopeButton(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
@@ -266,14 +271,15 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * {@inheritDoc}
+     *
      * @param scope
      */
     public void removeBadge(com.vaadin.ui.Component scope) {
         updateBadge(scope, 0);
         scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
         setCaption(scopesButtons.get(scope).getButton(),
-                   scopesButtons.get(scope).getButtonUi(),
-                   getInitialCaption(scopesButtons.get(scope).getButton()));
+                scopesButtons.get(scope).getButtonUi(),
+                getInitialCaption(scopesButtons.get(scope).getButton()));
     }
 
     /**
@@ -285,10 +291,10 @@ public class NotifierService implements InternalNotifierService, Serializable {
             scopesButtons.get(scope).getButton().setVisible(true);
             scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
             String newCaption = getInitialCaption(scopesButtons.get(scope).getButton()) +
-                    "<span class=\"badge\">" + scopesButtons.get(scope).getBadge() +"</span>";
+                    "<span class=\"badge\">" + scopesButtons.get(scope).getBadge() + "</span>";
             setCaption(scopesButtons.get(scope).getButton(),
-                       scopesButtons.get(scope).getButtonUi(),
-                       newCaption);
+                    scopesButtons.get(scope).getButtonUi(),
+                    newCaption);
         }
     }
 
@@ -301,17 +307,18 @@ public class NotifierService implements InternalNotifierService, Serializable {
             scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
             String newCaption = getInitialCaption(scopesButtons.get(scope).getButton()) +
                     ((scopesButtons.get(scope).getBadge() == 0) ? "" : "<span class=\"badge\">" +
-                            scopesButtons.get(scope).getBadge() +"</span>");
+                            scopesButtons.get(scope).getBadge() + "</span>");
             setCaption(scopesButtons.get(scope).getButton(),
-                       scopesButtons.get(scope).getButtonUi(),
-                       newCaption);
+                    scopesButtons.get(scope).getButtonUi(),
+                    newCaption);
         }
     }
 
     /**
      * Set badge as new
+     *
      * @param button button
-     * @param ui button UI
+     * @param ui     button UI
      */
     private void setBadgeAsNew(final Button button, UI ui) {
         button.setHtmlContentAllowed(true);
@@ -323,8 +330,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Set button caption
-     * @param button button
-     * @param ui button UI
+     *
+     * @param button  button
+     * @param ui      button UI
      * @param caption new button caption
      */
     private void setCaption(final Button button, UI ui, final String caption) {
@@ -338,8 +346,9 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Update badge when it is changed
+     *
      * @param scope scope
-     * @param op operation (+1, -1, set to 0)
+     * @param op    operation (+1, -1, set to 0)
      */
     private void updateBadge(com.vaadin.ui.Component scope, int op) {
         if (scopesButtons.containsKey(scope)) {
@@ -357,6 +366,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Get initial caption of the button
+     *
      * @param button button
      * @return button caption
      */
@@ -369,6 +379,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Update notification button, make it as unread.
+     *
      * @param notificationButton notification button
      */
     private void updateNotificationBadge(NotificationButton notificationButton) {
@@ -386,6 +397,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     /**
      * Format time
+     *
      * @param t timestamp
      * @return time string
      */

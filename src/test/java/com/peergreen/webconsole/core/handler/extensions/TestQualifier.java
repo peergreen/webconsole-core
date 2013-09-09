@@ -15,6 +15,8 @@ import java.lang.annotation.Target;
 @Qualifier("test")
 public @interface TestQualifier {
     String attr1();
+
     String attr2() default "";
+
     String attr3();
 }

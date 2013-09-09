@@ -4,6 +4,7 @@ import com.vaadin.ui.Button;
 
 /**
  * Notification button descriptor
+ *
  * @author Mohammed Boukada
  */
 public class NotificationButton {
@@ -20,8 +21,9 @@ public class NotificationButton {
 
     /**
      * Create notification button descriptor
+     *
      * @param button vaadin button
-     * @param badge badge value
+     * @param badge  badge value
      */
     public NotificationButton(Button button, int badge) {
         this.button = button;
@@ -30,6 +32,7 @@ public class NotificationButton {
 
     /**
      * Get notification button
+     *
      * @return notification button
      */
     public Button getButton() {
@@ -38,6 +41,7 @@ public class NotificationButton {
 
     /**
      * Get notification badge
+     *
      * @return notification badge
      */
     public int getBadge() {
@@ -46,6 +50,7 @@ public class NotificationButton {
 
     /**
      * Set notification badge
+     *
      * @param badge new badge value
      */
     public void setBadge(int badge) {

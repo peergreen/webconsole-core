@@ -19,6 +19,7 @@ import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.navigator.NavigationContext;
 import com.peergreen.webconsole.navigator.ViewNavigator;
 import com.vaadin.ui.Component;
+
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.InstanceStateListener;
@@ -65,10 +66,11 @@ import static java.lang.String.format;
 
 /**
  * Extension iPOJO handler
+ *
  * @author Mohammed Boukada
  */
 @Handler(name = "extension",
-         namespace = "com.peergreen.webconsole")
+        namespace = "com.peergreen.webconsole")
 public class ExtensionHandler extends DependencyHandler {
 
     /**
@@ -124,7 +126,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Stop handler. <br />
-     *
+     * <p/>
      * Stop children extensions.
      */
     @Override
@@ -152,7 +154,7 @@ public class ExtensionHandler extends DependencyHandler {
             }
 
             if (failed) {
-                String error = "Fail to add an extension to '" + properties.get("extension.point") +"'";
+                String error = "Fail to add an extension to '" + properties.get("extension.point") + "'";
                 if (notifierService != null) {
                     notifierService.addNotification(error);
                 } else {
@@ -172,6 +174,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Set extension properties. {@link com.peergreen.webconsole.Qualifier}'s attributes are added as properties
+     *
      * @param configuration configuration
      * @return configuration updated
      * @throws ConfigurationException
@@ -198,7 +201,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Get field annotated by {@link com.peergreen.webconsole.Inject} <br />
-     *
+     * <p/>
      * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
      * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
      * fields type are directly injected.
@@ -235,11 +238,11 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Get methods annotated by {@link com.peergreen.webconsole.Inject} <br />
-     *
+     * <p/>
      * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
      * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
      * fields type are directly injected. <br />
-     *
+     * <p/>
      * Methods annotated by {@link javax.annotation.PostConstruct} and {@link javax.annotation.PreDestroy} are called
      * when this component is valide/invalide.
      *
@@ -287,6 +290,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Get extension specifications
+     *
      * @param clazz class
      * @return list of specifications to register
      */
@@ -306,6 +310,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Get Validate / Invalidate methods
+     *
      * @param clazz class
      * @return validation methods
      */
@@ -328,9 +333,10 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Whether extension can be bound to this extension
+     *
      * @param properties extension to bound
      * @return True if extension point is one of those provided by this extension and if user logged in has
-     * the right roles, false otherwise.
+     *         the right roles, false otherwise.
      */
     private boolean canBindExtensionFactory(Dictionary properties) {
         String extensionId = (String) properties.get(EXTENSION_POINT);
@@ -339,6 +345,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Is user in roles
+     *
      * @param properties to get required roles
      * @return True if logged in user has required roles, false otherwise.
      */
@@ -353,6 +360,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Create methods and fields bindings
+     *
      * @param metadata metadata
      * @return metadata updated
      * @throws ConfigurationException
@@ -430,6 +438,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Add callback methods to extension metadata
+     *
      * @param metadata metadata
      */
     private void addCallbackMethodsToMetadata(Element metadata) {
@@ -465,6 +474,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Add required fields to metadata
+     *
      * @param metadata metadata
      */
     private void addRequiredFieldsToMetadata(List<Field> fieldsToBind, Element metadata) {
@@ -495,6 +505,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Create navigation model if extension a scope or navigable
+     *
      * @param configuration configuration
      * @throws ConfigurationException
      */
@@ -531,6 +542,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Get navigate callback method
+     *
      * @return navigate callback method
      */
     private Method getNavigateCallbackMethod() {
@@ -545,7 +557,7 @@ public class ExtensionHandler extends DependencyHandler {
 
                 // default alias is class name
                 Class<?>[] parameterTypes = method.getParameterTypes();
-                if (parameterTypes.length != 1){
+                if (parameterTypes.length != 1) {
                     LOGGER.error("Method annotated with @Navigate should have one parameter");
                     continue;
                 } else if (parameterTypes[0] != NavigationContext.class) {
@@ -595,6 +607,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     /**
      * Extension instance state listener. Register extension's specifications
+     *
      * @author Mohammed Boukada
      */
     public class ExtensionInstanceStateListener implements InstanceStateListener {
@@ -629,7 +642,7 @@ public class ExtensionHandler extends DependencyHandler {
                                 Arrays.asList(specifications)));
             } else {
                 switch (newState) {
-                    case ComponentInstance.VALID :
+                    case ComponentInstance.VALID:
                         for (Method method : validateCallbacks) {
                             try {
                                 method.invoke(ownInstanceManager.getPojoObject());
@@ -642,9 +655,9 @@ public class ExtensionHandler extends DependencyHandler {
                                     bc.registerService(specifications, getInstanceManager().getPojoObject(), configuration);
                         }
                         break;
-                    case ComponentInstance.INVALID :
-                    case ComponentInstance.DISPOSED :
-                    case ComponentInstance.STOPPED :
+                    case ComponentInstance.INVALID:
+                    case ComponentInstance.DISPOSED:
+                    case ComponentInstance.STOPPED:
                         if (serviceRegistration != null) {
                             serviceRegistration.unregister();
                             serviceRegistration = null;
@@ -664,7 +677,9 @@ public class ExtensionHandler extends DependencyHandler {
 
     public interface InstanceManager {
         Object getPojoObject();
+
         BundleContext getBundleContext();
+
         void addInstanceStateListener(InstanceStateListener listener);
     }
 

@@ -2,6 +2,7 @@ package com.peergreen.webconsole.core.vaadin7;
 
 import com.peergreen.webconsole.Constants;
 import com.vaadin.server.UIProvider;
+
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
@@ -22,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Vaadin UI provider factory
+ *
  * @author Mohammed Boukada
  */
 @Component

@@ -9,6 +9,7 @@ import com.peergreen.webconsole.core.handler.extensions.ExtensionPointProvider;
 import com.peergreen.webconsole.core.handler.extensions.TestInterface;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.metadata.Element;
 import org.mockito.Mock;
@@ -127,8 +128,7 @@ public class ExtensionHandlerTestCase {
         for (Element element : newMetadata.getElements("requires")) {
             if (element.containsAttribute("field") && element.getAttribute("field").equals("notifierService")) {
                 fieldRequirementPresent = true;
-            }
-            else if (element.containsAttribute("filter")) {
+            } else if (element.containsAttribute("filter")) {
                 Assert.assertTrue(element.containsAttribute("aggregate"), "aggregate attribute missing");
                 Assert.assertEquals(element.getAttribute("aggregate"), "true", "aggregate attribute must be true");
 

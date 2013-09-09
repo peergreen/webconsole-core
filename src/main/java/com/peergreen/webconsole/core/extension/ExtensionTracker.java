@@ -2,6 +2,7 @@ package com.peergreen.webconsole.core.extension;
 
 import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.ExtensionPoint;
+
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
@@ -30,6 +31,7 @@ import static java.lang.String.format;
 
 /**
  * Extension tracker
+ *
  * @author Mohammed Boukada
  */
 @Component
@@ -58,7 +60,7 @@ public class ExtensionTracker implements TrackerCustomizer {
 
     /**
      * Create and open tracker <br />
-     *
+     * <p/>
      * This tracker focus on classes annotated by {@link com.peergreen.webconsole.Extension}.
      */
     @Validate
@@ -88,6 +90,7 @@ public class ExtensionTracker implements TrackerCustomizer {
     /**
      * A class matches tracker filer, it is an extension then create
      * its extension factory and start it.
+     *
      * @param reference service reference
      */
     @Override
@@ -127,8 +130,9 @@ public class ExtensionTracker implements TrackerCustomizer {
 
     /**
      * Stop extension
+     *
      * @param reference service reference
-     * @param service service object
+     * @param service   service object
      */
     @Override
     public void removedService(ServiceReference reference, Object service) {

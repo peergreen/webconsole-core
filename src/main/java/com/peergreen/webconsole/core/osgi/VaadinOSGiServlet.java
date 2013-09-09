@@ -11,9 +11,10 @@ import javax.servlet.annotation.WebServlet;
 /**
  * Vaadin OSGi Servlet
  * to add Vaadin UI provider dynamically
+ *
  * @author Mohammed Boukada
  */
-@WebServlet(asyncSupported=true)
+@WebServlet(asyncSupported = true)
 public class VaadinOSGiServlet extends VaadinServlet {
 
     private static final long serialVersionUID = 1L;
@@ -25,13 +26,15 @@ public class VaadinOSGiServlet extends VaadinServlet {
 
     /**
      * Vaadin OSGi Servlet constructor
+     *
      * @param provider
      */
     public VaadinOSGiServlet(UIProvider provider) {
         this.provider = provider;
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      */
     @Override
     protected VaadinServletService createServletService(DeploymentConfiguration deploymentConfiguration) throws ServiceException {

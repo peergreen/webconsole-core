@@ -5,6 +5,7 @@ import com.peergreen.webconsole.Unlink;
 import com.peergreen.webconsole.core.notifier.InternalNotifierService;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
+
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.handlers.dependency.Dependency;
 import org.apache.felix.ipojo.handlers.dependency.DependencyCallback;
@@ -54,7 +55,7 @@ public class LinkDependencyCallback extends DependencyCallback {
                 @Override
                 public void run() {
                     try {
-                        newObject[0] =  m_methodObj.invoke(manager.getPojoObject(), arg);
+                        newObject[0] = m_methodObj.invoke(manager.getPojoObject(), arg);
                         updateNotifier();
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         LOGGER.error(e.getMessage());

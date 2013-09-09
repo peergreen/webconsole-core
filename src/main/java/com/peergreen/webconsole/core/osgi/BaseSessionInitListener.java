@@ -9,11 +9,13 @@ import com.vaadin.server.ServiceException;
 import com.vaadin.server.SessionInitEvent;
 import com.vaadin.server.SessionInitListener;
 import com.vaadin.server.UIProvider;
+
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 /**
  * Session init listener
+ *
  * @author Mohammed Boukada
  */
 public class BaseSessionInitListener implements SessionInitListener {

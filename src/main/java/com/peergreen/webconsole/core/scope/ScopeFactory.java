@@ -7,6 +7,7 @@ import java.util.List;
 
 /**
  * Scope factory descriptor
+ *
  * @author Mohammed Boukada
  */
 public class ScopeFactory {
@@ -23,6 +24,7 @@ public class ScopeFactory {
 
     /**
      * Create scope factory descriptor
+     *
      * @param roles roles allowed
      */
     public ScopeFactory(List<String> roles) {
@@ -31,6 +33,7 @@ public class ScopeFactory {
 
     /**
      * Get allowed roles
+     *
      * @return allowed roles
      */
     public List<String> getRoles() {
@@ -39,6 +42,7 @@ public class ScopeFactory {
 
     /**
      * Get scope instance handle
+     *
      * @return scope instance handle
      */
     public InstanceHandle getInstance() {
@@ -47,6 +51,7 @@ public class ScopeFactory {
 
     /**
      * Set scope instance handle
+     *
      * @param instance scope instance handle
      */
     public void setInstance(InstanceHandle instance) {

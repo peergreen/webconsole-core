@@ -2,6 +2,7 @@ package com.peergreen.webconsole.core.extension;
 
 import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.UIContext;
+
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
@@ -17,6 +18,7 @@ import java.util.Hashtable;
 /**
  * Extension factory. <br />
  * This factory creates an instance of given extension for each client (UI)
+ *
  * @author Mohammed Boukada
  */
 @Component
@@ -47,6 +49,7 @@ public class BaseExtensionFactory implements ExtensionFactory {
 
     /**
      * {@inheritDoc}
+     *
      * @author Mohamme Boukada
      */
     public class BaseInstanceHandle implements InstanceHandle {

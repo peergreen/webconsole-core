@@ -3,6 +3,7 @@ package com.peergreen.webconsole.core.resource;
 import com.peergreen.webconsole.INotifierService;
 import com.peergreen.webconsole.resource.CssHandle;
 import com.peergreen.webconsole.resource.CssInjectorService;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.wiring.BundleWiring;
@@ -15,6 +16,7 @@ import java.util.List;
 
 /**
  * Bundle tracker for css contribution
+ *
  * @author Mohammed Boukada
  */
 public class BaseBundleTrackerCustomizer implements BundleTrackerCustomizer<List<CssHandle>> {
@@ -29,7 +31,7 @@ public class BaseBundleTrackerCustomizer implements BundleTrackerCustomizer<List
 
     /**
      * {@inheritDoc} <br />
-     *
+     * <p/>
      * If bundle contains css/ folder, adds all *.css file as a css contribution
      */
     @Override
@@ -56,7 +58,7 @@ public class BaseBundleTrackerCustomizer implements BundleTrackerCustomizer<List
 
     /**
      * {@inheritDoc} <br />
-     *
+     * <p/>
      * Remove css contribution when bundle is stopping.
      */
     @Override

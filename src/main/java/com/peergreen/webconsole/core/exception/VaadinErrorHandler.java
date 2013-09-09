@@ -2,6 +2,7 @@ package com.peergreen.webconsole.core.exception;
 
 import com.vaadin.server.ErrorEvent;
 import com.vaadin.server.ErrorHandler;
+
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 

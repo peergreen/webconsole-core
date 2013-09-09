@@ -2,6 +2,7 @@ package com.peergreen.webconsole.core.notifier.utils;
 
 /**
  * Notification descriptor
+ *
  * @author Mohammed Boukada
  */
 public class Notification {
@@ -18,8 +19,9 @@ public class Notification {
 
     /**
      * Create a notification descriptor
+     *
      * @param message notification message
-     * @param date notification date
+     * @param date    notification date
      */
     public Notification(String message, Long date) {
         this.message = message;
@@ -28,6 +30,7 @@ public class Notification {
 
     /**
      * Get notification message
+     *
      * @return notification message
      */
     public String getMessage() {
@@ -36,6 +39,7 @@ public class Notification {
 
     /**
      * Get notification date
+     *
      * @return notification date
      */
     public Long getDate() {

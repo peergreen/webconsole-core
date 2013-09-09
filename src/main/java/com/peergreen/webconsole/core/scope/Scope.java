@@ -5,6 +5,7 @@ import com.vaadin.ui.Component;
 
 /**
  * Scope descriptor
+ *
  * @author Mohammed Boukada
  */
 public class Scope {
@@ -36,10 +37,11 @@ public class Scope {
 
     /**
      * Create new scope descriptor
-     * @param scopeName scope name
-     * @param scopeAlias scope alias
+     *
+     * @param scopeName      scope name
+     * @param scopeAlias     scope alias
      * @param scopeIconClass scope icon class
-     * @param scopeView scope view
+     * @param scopeView      scope view
      */
     public Scope(String scopeName, String scopeAlias, String scopeIconClass, Component scopeView) {
         this.scopeName = scopeName;
@@ -50,6 +52,7 @@ public class Scope {
 
     /**
      * Get scope name
+     *
      * @return scope name
      */
     public String getScopeName() {
@@ -58,6 +61,7 @@ public class Scope {
 
     /**
      * Get scope alias
+     *
      * @return scope alias
      */
     public String getScopeAlias() {
@@ -66,6 +70,7 @@ public class Scope {
 
     /**
      * Get scope icon class
+     *
      * @return scope icon class
      */
     public String getScopeIconClass() {
@@ -74,6 +79,7 @@ public class Scope {
 
     /**
      * Get scope view
+     *
      * @return scope view
      */
     public Component getScopeView() {
@@ -82,6 +88,7 @@ public class Scope {
 
     /**
      * Get scope menu button
+     *
      * @return scope menu button
      */
     public Button getScopeMenuButton() {
@@ -90,6 +97,7 @@ public class Scope {
 
     /**
      * set scope menu button
+     *
      * @param scopeMenuButton scope menu button
      */
     public void setScopeMenuButton(Button scopeMenuButton) {

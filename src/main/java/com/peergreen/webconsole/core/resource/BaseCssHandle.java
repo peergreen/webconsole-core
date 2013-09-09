@@ -4,6 +4,7 @@ import com.peergreen.webconsole.resource.CssHandle;
 
 /**
  * Css contribution handle implementation
+ *
  * @author Mohammed Boukada
  */
 public class BaseCssHandle implements CssHandle {
@@ -12,7 +13,8 @@ public class BaseCssHandle implements CssHandle {
 
     /**
      * Create new css contribution handle
-     * @param cssContent css content
+     *
+     * @param cssContent         css content
      * @param cssInjectorService css contribution service
      */
     public BaseCssHandle(String cssContent, BaseCssInjectorService cssInjectorService) {

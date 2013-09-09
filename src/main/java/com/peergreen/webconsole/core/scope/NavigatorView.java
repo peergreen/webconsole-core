@@ -7,6 +7,7 @@ import com.vaadin.ui.CssLayout;
 
 /**
  * Build a scope view for Navigator
+ *
  * @author Mohammed Boukada
  */
 public class NavigatorView extends CssLayout implements View {

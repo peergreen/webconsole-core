@@ -7,6 +7,7 @@ import java.util.Map;
 
 /**
  * Navigation context implementation
+ *
  * @author Mohammed Boukada
  */
 public class BaseNavigationContext implements NavigationContext {
