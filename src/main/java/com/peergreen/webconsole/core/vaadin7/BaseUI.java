@@ -179,6 +179,10 @@ public class BaseUI extends UI implements Serializable {
     @Requires
     private UsernamePasswordAuthenticateService authenticateService;
 
+    public BaseUI() {
+        // empty public no-args constructor
+    }
+
     /**
      * Base console UI constructor
      */

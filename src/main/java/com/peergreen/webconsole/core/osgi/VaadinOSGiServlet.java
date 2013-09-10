@@ -1,12 +1,14 @@
 package com.peergreen.webconsole.core.osgi;
 
+import javax.servlet.annotation.WebServlet;
+
+import com.peergreen.webconsole.core.vaadin7.BaseUI;
+import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.server.DeploymentConfiguration;
 import com.vaadin.server.ServiceException;
 import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinServletService;
-
-import javax.servlet.annotation.WebServlet;
 
 /**
  * Vaadin OSGi Servlet
@@ -15,6 +17,7 @@ import javax.servlet.annotation.WebServlet;
  * @author Mohammed Boukada
  */
 @WebServlet(asyncSupported = true)
+@VaadinServletConfiguration(ui = BaseUI.class, productionMode = true)
 public class VaadinOSGiServlet extends VaadinServlet {
 
     private static final long serialVersionUID = 1L;
