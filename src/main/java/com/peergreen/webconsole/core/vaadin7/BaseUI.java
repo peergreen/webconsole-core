@@ -1,5 +1,31 @@
 package com.peergreen.webconsole.core.vaadin7;
 
+import javax.security.auth.Subject;
+import javax.servlet.http.Cookie;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.MissingHandlerException;
+import org.apache.felix.ipojo.UnacceptableConfiguration;
+import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Unbind;
+import org.apache.felix.ipojo.annotations.Validate;
+import org.ow2.util.log.Log;
+import org.ow2.util.log.LogFactory;
+
 import com.peergreen.security.UsernamePasswordAuthenticateService;
 import com.peergreen.security.principal.RoleGroup;
 import com.peergreen.security.principal.RolePrincipal;
@@ -50,32 +76,6 @@ import com.vaadin.ui.UIDetachedException;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.util.CurrentInstance;
-
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.MissingHandlerException;
-import org.apache.felix.ipojo.UnacceptableConfiguration;
-import org.apache.felix.ipojo.annotations.Bind;
-import org.apache.felix.ipojo.annotations.Invalidate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
-import org.ow2.util.log.Log;
-import org.ow2.util.log.LogFactory;
-
-import javax.security.auth.Subject;
-import javax.servlet.http.Cookie;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Base console UI
