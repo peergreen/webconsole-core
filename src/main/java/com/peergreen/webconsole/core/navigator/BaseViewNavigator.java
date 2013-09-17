@@ -1,7 +1,7 @@
 package com.peergreen.webconsole.core.navigator;
 
 import com.peergreen.webconsole.Constants;
-import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.notifier.INotifierService;
 import com.peergreen.webconsole.core.exception.ExceptionView;
 import com.peergreen.webconsole.core.scope.NavigatorView;
 import com.peergreen.webconsole.core.scope.Scope;

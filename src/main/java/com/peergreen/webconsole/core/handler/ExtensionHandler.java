@@ -1,24 +1,30 @@
 package com.peergreen.webconsole.core.handler;
 
-import com.peergreen.webconsole.ExtensionPoint;
-import com.peergreen.webconsole.INotifierService;
-import com.peergreen.webconsole.ISecurityManager;
-import com.peergreen.webconsole.Inject;
-import com.peergreen.webconsole.Link;
-import com.peergreen.webconsole.Qualifier;
-import com.peergreen.webconsole.Scope;
-import com.peergreen.webconsole.UIContext;
-import com.peergreen.webconsole.Unlink;
-import com.peergreen.webconsole.core.extension.ExtensionFactory;
-import com.peergreen.webconsole.core.extension.InstanceHandle;
-import com.peergreen.webconsole.core.extension.InstanceState;
-import com.peergreen.webconsole.core.notifier.InternalNotifierService;
-import com.peergreen.webconsole.navigator.Navigable;
-import com.peergreen.webconsole.navigator.NavigableModel;
-import com.peergreen.webconsole.navigator.Navigate;
-import com.peergreen.webconsole.navigator.NavigationContext;
-import com.peergreen.webconsole.navigator.ViewNavigator;
-import com.vaadin.ui.Component;
+import static com.peergreen.webconsole.Constants.EXTENSION_ALIAS;
+import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
+import static com.peergreen.webconsole.Constants.EXTENSION_ROLES;
+import static com.peergreen.webconsole.Constants.UI_CONTEXT;
+import static com.peergreen.webconsole.Constants.UI_ID;
+import static com.peergreen.webconsole.Constants.WEBCONSOLE_EXTENSION;
+import static java.lang.String.format;
+import static org.apache.felix.ipojo.ComponentInstance.DISPOSED;
+import static org.apache.felix.ipojo.ComponentInstance.INVALID;
+import static org.apache.felix.ipojo.ComponentInstance.STOPPED;
+import static org.apache.felix.ipojo.ComponentInstance.VALID;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -42,27 +48,25 @@ import org.osgi.framework.ServiceRegistration;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static com.peergreen.webconsole.Constants.EXTENSION_ALIAS;
-import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
-import static com.peergreen.webconsole.Constants.EXTENSION_ROLES;
-import static com.peergreen.webconsole.Constants.UI_CONTEXT;
-import static com.peergreen.webconsole.Constants.UI_ID;
-import static com.peergreen.webconsole.Constants.WEBCONSOLE_EXTENSION;
-import static java.lang.String.format;
+import com.peergreen.webconsole.ExtensionPoint;
+import com.peergreen.webconsole.ISecurityManager;
+import com.peergreen.webconsole.Inject;
+import com.peergreen.webconsole.Link;
+import com.peergreen.webconsole.Qualifier;
+import com.peergreen.webconsole.Scope;
+import com.peergreen.webconsole.UIContext;
+import com.peergreen.webconsole.Unlink;
+import com.peergreen.webconsole.core.extension.ExtensionFactory;
+import com.peergreen.webconsole.core.extension.InstanceHandle;
+import com.peergreen.webconsole.core.extension.InstanceState;
+import com.peergreen.webconsole.core.notifier.InternalNotifierService;
+import com.peergreen.webconsole.navigator.Navigable;
+import com.peergreen.webconsole.navigator.NavigableModel;
+import com.peergreen.webconsole.navigator.Navigate;
+import com.peergreen.webconsole.navigator.NavigationContext;
+import com.peergreen.webconsole.navigator.ViewNavigator;
+import com.peergreen.webconsole.notifier.INotifierService;
+import com.vaadin.ui.Component;
 
 /**
  * Extension iPOJO handler

@@ -1,6 +1,6 @@
 package com.peergreen.webconsole.core.resource;
 
-import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.notifier.INotifierService;
 import com.peergreen.webconsole.resource.CssHandle;
 import com.peergreen.webconsole.resource.CssInjectorService;
 import com.vaadin.ui.UI;

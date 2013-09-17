@@ -1,6 +1,6 @@
 package com.peergreen.webconsole.core.notifier;
 
-import com.peergreen.webconsole.INotifierService;
+import com.peergreen.webconsole.notifier.INotifierService;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
