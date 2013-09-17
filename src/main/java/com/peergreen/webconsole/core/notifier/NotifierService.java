@@ -1,23 +1,5 @@
 package com.peergreen.webconsole.core.notifier;
 
-import com.peergreen.webconsole.HelpOverlay;
-import com.peergreen.webconsole.core.notifier.utils.Notification;
-import com.peergreen.webconsole.core.notifier.utils.NotificationButton;
-import com.peergreen.webconsole.core.notifier.utils.ScopeButton;
-import com.peergreen.webconsole.core.notifier.utils.Task;
-import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.ProgressIndicator;
-import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
-
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,6 +10,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Provides;
+
+import com.peergreen.webconsole.HelpOverlay;
+import com.peergreen.webconsole.core.notifier.utils.Notification;
+import com.peergreen.webconsole.core.notifier.utils.NotificationButton;
+import com.peergreen.webconsole.core.notifier.utils.ScopeButton;
+import com.peergreen.webconsole.notifier.Task;
+import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.ProgressBar;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 /**
  * Notifier service implementation
@@ -46,8 +46,8 @@ public class NotifierService implements InternalNotifierService, Serializable {
     private Map<UI, NotificationButton> notificationButtons = new ConcurrentHashMap<>();
     private Map<UI, HorizontalLayout> tasksBars = new ConcurrentHashMap<>();
     private ConcurrentLinkedDeque<Notification> notifications = new ConcurrentLinkedDeque<>();
-    private Queue<Task> tasks = new ConcurrentLinkedQueue<>();
-    private Task currentTask;
+    private Queue<BaseTask> tasks = new ConcurrentLinkedQueue<>();
+    private BaseTask currentTask;
 
     /**
      * Close all overlays
@@ -67,7 +67,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
         notifications.add(new Notification(notification, System.currentTimeMillis()));
         for (final Map.Entry<UI, NotificationButton> notificationButtonEntry : notificationButtons.entrySet()) {
             UI ui = notificationButtonEntry.getKey();
-            if (!ui.isClosing()) {
+            if (isUIAvailable(ui)) {
                 ui.access(new Runnable() {
                     @Override
                     public void run() {
@@ -75,82 +75,38 @@ public class NotifierService implements InternalNotifierService, Serializable {
                         updateNotificationBadge(notificationButtonEntry.getValue());
                     }
                 });
-            } else {
-                clearComponentsForUI(ui);
             }
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void startTask(Object worker, String message, Long contentLength) {
-        tasks.add(new Task(worker, message, contentLength));
+    public Task createTask(String message) {
+        BaseTask task = new BaseTask(message, this);
+        tasks.add(task);
         showTask();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateTask(final Object worker, final Long bytesReceived) {
-        for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
-            UI ui = taskBar.getKey();
-            if (ui.isClosing()) {
-                clearComponentsForUI(ui);
-            } else {
-                getTask(worker).updateTask(bytesReceived);
-                ui.push();
-            }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void stopTask(Object worker) {
-        if (currentTask.equals(getTask(worker))) {
-            currentTask = null;
-        }
-        removeTask(worker);
-        showTask();
-        for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
-            UI ui = taskBar.getKey();
-            if (!ui.isClosing()) {
-                ui.access(new Runnable() {
-                    @Override
-                    public void run() {
-                        taskBar.getValue().removeAllComponents();
-                    }
-                });
-            } else {
-                clearComponentsForUI(ui);
-            }
-        }
+        return task;
     }
 
     /**
      * Show current task
      */
-    private void showTask() {
-        if (currentTask == null && tasks.size() > 0) {
-            final Task task = tasks.peek();
-            currentTask = task;
+    protected void showTask() {
+        if (currentTask == null) {
+            currentTask = tasks.peek();
             for (final Map.Entry<UI, HorizontalLayout> taskBar : tasksBars.entrySet()) {
                 UI ui = taskBar.getKey();
-                if (ui.isClosing()) {
-                    clearComponentsForUI(ui);
-                } else {
+                if (isUIAvailable(ui)) {
                     ui.access(new Runnable() {
                         @Override
                         public void run() {
                             taskBar.getValue().removeAllComponents();
-                            taskBar.getValue().addComponent(new Label(task.getMessage()));
-                            ProgressIndicator progressIndicator = new ProgressIndicator();
-                            task.addProgressIndicator(progressIndicator);
-                            taskBar.getValue().addComponent(progressIndicator);
+                            if (currentTask != null) {
+                                ProgressBar progressBar = new ProgressBar();
+                                progressBar.setIndeterminate(true);
+                                progressBar.setVisible(true);
+                                taskBar.getValue().addComponent(progressBar);
+                                taskBar.getValue().addComponent(new Label(currentTask.getMessage(), ContentMode.HTML));
+                            }
                         }
                     });
                 }
@@ -158,33 +114,25 @@ public class NotifierService implements InternalNotifierService, Serializable {
         }
     }
 
-    /**
-     * Get task
-     *
-     * @param worker task worker
-     * @return task descriptor
-     */
-    private Task getTask(Object worker) {
-        for (Task task : tasks) {
-            if (worker.equals(task.getWorker())) {
-                return task;
-            }
+    private boolean isUIAvailable(UI ui) {
+        if (ui.isClosing()) {
+            clearComponentsForUI(ui);
+            return false;
         }
-        return null;
+        return true;
     }
 
     /**
      * Remove task
      *
-     * @param worker task worker
+     * @param task task
      */
-    private void removeTask(Object worker) {
-        for (Task task : tasks) {
-            if (worker.equals(task.getWorker())) {
-                tasks.remove(task);
-                return;
-            }
+    protected void hideTask(BaseTask task) {
+        tasks.remove(task);
+        if (currentTask.equals(task)) {
+            currentTask = null;
         }
+        showTask();
     }
 
     /**
