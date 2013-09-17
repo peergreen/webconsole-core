@@ -621,6 +621,7 @@ public class ExtensionHandler extends DependencyHandler {
         private ServiceRegistration serviceRegistration;
         private List<Method> validateCallbacks = new ArrayList<>();
         private List<Method> invalidateCallbacks = new ArrayList<>();
+        private int state;
 
         public ExtensionInstanceStateListener(Dictionary<String, ?> configuration) {
             List<String> listSpecifications = getSpecifications(extensionType);
@@ -633,6 +634,7 @@ public class ExtensionHandler extends DependencyHandler {
             }
             this.specifications = listSpecifications.toArray(new String[listSpecifications.size()]);
             this.configuration = configuration;
+            this.state = ownInstanceManager.getState();
         }
 
         @Override
@@ -645,35 +647,32 @@ public class ExtensionHandler extends DependencyHandler {
                                 bc.getBundle().getBundleId(),
                                 Arrays.asList(specifications)));
             } else {
-                switch (newState) {
-                    case ComponentInstance.VALID:
-                        for (Method method : validateCallbacks) {
-                            try {
-                                method.invoke(ownInstanceManager.getPojoObject());
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                LOGGER.error("Fail to call ''{0}''", method.getName(), e);
-                            }
+                if (newState == VALID) {
+                    for (Method method : validateCallbacks) {
+                        try {
+                            method.invoke(ownInstanceManager.getPojoObject());
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            LOGGER.error("Fail to call ''{0}''", method.getName(), e);
                         }
-                        if (specifications.length >= 1) {
-                            serviceRegistration =
-                                    bc.registerService(specifications, getInstanceManager().getPojoObject(), configuration);
+                    }
+                    if (specifications.length >= 1) {
+                        serviceRegistration =
+                                bc.registerService(specifications, getInstanceManager().getPojoObject(), configuration);
+                    }
+                    state = VALID;
+                } else if ((newState == INVALID || newState == STOPPED || newState == DISPOSED) && state == VALID) {
+                    if (serviceRegistration != null) {
+                        serviceRegistration.unregister();
+                        serviceRegistration = null;
+                    }
+                    for (Method method : invalidateCallbacks) {
+                        try {
+                            method.invoke(ownInstanceManager.getPojoObject());
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            LOGGER.error("Fail to call ''{0}''", method.getName(), e);
                         }
-                        break;
-                    case ComponentInstance.INVALID:
-                    case ComponentInstance.DISPOSED:
-                    case ComponentInstance.STOPPED:
-                        if (serviceRegistration != null) {
-                            serviceRegistration.unregister();
-                            serviceRegistration = null;
-                        }
-                        for (Method method : invalidateCallbacks) {
-                            try {
-                                method.invoke(ownInstanceManager.getPojoObject());
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                LOGGER.error("Fail to call ''{0}''", method.getName(), e);
-                            }
-                        }
-                        break;
+                    }
+                    state = newState;
                 }
             }
         }
@@ -685,6 +684,8 @@ public class ExtensionHandler extends DependencyHandler {
         BundleContext getBundleContext();
 
         void addInstanceStateListener(InstanceStateListener listener);
+
+        int getState();
     }
 
     public class OwnInstanceManager implements InstanceManager {
@@ -702,6 +703,11 @@ public class ExtensionHandler extends DependencyHandler {
         @Override
         public void addInstanceStateListener(InstanceStateListener listener) {
             ExtensionHandler.this.getInstanceManager().addInstanceStateListener(listener);
+        }
+
+        @Override
+        public int getState() {
+            return ExtensionHandler.this.getInstanceManager().getState();
         }
     }
 }
