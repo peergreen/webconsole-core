@@ -841,11 +841,11 @@ public class BaseUI extends UI implements Serializable {
             addComponent(new CssLayout() {
                 {
                     addStyleName("branding");
-                    Label logo = new Label(
+                    Label title = new Label(
                             formatTitle(consoleName),
                             ContentMode.HTML);
-                    logo.setSizeUndefined();
-                    addComponent(logo);
+                    title.setSizeUndefined();
+                    addComponent(title);
                 }
             });
 
@@ -927,6 +927,13 @@ public class BaseUI extends UI implements Serializable {
             toolbar.setWidth(MAX_WIDTH);
             toolbar.setSpacing(true);
             toolbar.addStyleName("toolbar");
+
+            Image logo = new Image(
+                    null,
+                    new ThemeResource("img/logo-peergreen.png"));
+            toolbar.addComponent(logo);
+            toolbar.setComponentAlignment(logo, Alignment.MIDDLE_LEFT);
+
             toolbar.addComponent(tasksBar);
             toolbar.setComponentAlignment(tasksBar, Alignment.MIDDLE_LEFT);
             toolbar.setExpandRatio(tasksBar, 1);
