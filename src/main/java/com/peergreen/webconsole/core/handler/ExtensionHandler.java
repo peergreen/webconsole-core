@@ -76,7 +76,6 @@ import com.peergreen.webconsole.navigator.NavigableModel;
 import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.navigator.NavigationContext;
 import com.peergreen.webconsole.navigator.ViewNavigator;
-import com.peergreen.webconsole.notifier.INotifierService;
 import com.vaadin.ui.Component;
 
 /**
@@ -613,7 +612,7 @@ public class ExtensionHandler extends DependencyHandler {
     }
 
     @Unbind
-    public void unbindNotifierService(INotifierService notifierService) {
+    public void unbindNotifierService(InternalNotifierService notifierService) {
         this.notifierService = null;
         for (LinkDependencyCallback dependencyCallback : dependencyCallbacks) {
             dependencyCallback.setNotifierService(null);
