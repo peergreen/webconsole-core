@@ -11,17 +11,17 @@
 
 package com.peergreen.webconsole.core.handler.extensions;
 
+import org.osgi.framework.BundleContext;
+
 import com.peergreen.webconsole.Extension;
 import com.peergreen.webconsole.ExtensionPoint;
-import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.UIContext;
 import com.peergreen.webconsole.Unlink;
 import com.peergreen.webconsole.notifier.INotifierService;
+import com.peergreen.webconsole.security.ISecurityManager;
 import com.vaadin.ui.Button;
-
-import org.osgi.framework.BundleContext;
 
 /**
  * @author Mohammed Boukada

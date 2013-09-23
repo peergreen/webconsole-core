@@ -60,7 +60,6 @@ import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
 import com.peergreen.webconsole.ExtensionPoint;
-import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.Inject;
 import com.peergreen.webconsole.Link;
 import com.peergreen.webconsole.Qualifier;
@@ -76,6 +75,7 @@ import com.peergreen.webconsole.navigator.NavigableModel;
 import com.peergreen.webconsole.navigator.Navigate;
 import com.peergreen.webconsole.navigator.NavigationContext;
 import com.peergreen.webconsole.navigator.ViewNavigator;
+import com.peergreen.webconsole.security.ISecurityManager;
 import com.vaadin.ui.Component;
 
 /**
@@ -216,7 +216,7 @@ public class ExtensionHandler extends DependencyHandler {
     /**
      * Get field annotated by {@link com.peergreen.webconsole.Inject} <br />
      * <p/>
-     * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
+     * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.security.ISecurityManager},
      * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
      * fields type are directly injected.
      *
@@ -253,7 +253,7 @@ public class ExtensionHandler extends DependencyHandler {
     /**
      * Get methods annotated by {@link com.peergreen.webconsole.Inject} <br />
      * <p/>
-     * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.ISecurityManager},
+     * {@link org.osgi.framework.BundleContext}, {@link com.peergreen.webconsole.security.ISecurityManager},
      * {@link com.peergreen.webconsole.navigator.ViewNavigator} and {@link com.peergreen.webconsole.UIContext}
      * fields type are directly injected. <br />
      * <p/>

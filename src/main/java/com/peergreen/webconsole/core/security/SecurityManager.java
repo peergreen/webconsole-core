@@ -11,14 +11,14 @@
 
 package com.peergreen.webconsole.core.security;
 
-import com.peergreen.webconsole.ISecurityManager;
-
 import javax.security.auth.Subject;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+
+import com.peergreen.webconsole.security.ISecurityManager;
 
 /**
  * Web Console security manager implementation

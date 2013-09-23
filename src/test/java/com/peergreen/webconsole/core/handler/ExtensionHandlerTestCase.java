@@ -11,15 +11,14 @@
 
 package com.peergreen.webconsole.core.handler;
 
-import com.peergreen.webconsole.Constants;
-import com.peergreen.webconsole.ISecurityManager;
-import com.peergreen.webconsole.UIContext;
-import com.peergreen.webconsole.core.handler.extensions.ExtensionExample;
-import com.peergreen.webconsole.core.handler.extensions.ExtensionExtendsProvider;
-import com.peergreen.webconsole.core.handler.extensions.ExtensionPointProvider;
-import com.peergreen.webconsole.core.handler.extensions.TestInterface;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
+import static org.mockito.Mockito.when;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.metadata.Element;
@@ -30,14 +29,15 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-
-import static org.mockito.Mockito.when;
+import com.peergreen.webconsole.Constants;
+import com.peergreen.webconsole.UIContext;
+import com.peergreen.webconsole.core.handler.extensions.ExtensionExample;
+import com.peergreen.webconsole.core.handler.extensions.ExtensionExtendsProvider;
+import com.peergreen.webconsole.core.handler.extensions.ExtensionPointProvider;
+import com.peergreen.webconsole.core.handler.extensions.TestInterface;
+import com.peergreen.webconsole.security.ISecurityManager;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 
 /**
  * @author Mohammed Boukada

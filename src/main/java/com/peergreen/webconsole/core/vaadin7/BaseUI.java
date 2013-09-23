@@ -37,12 +37,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
-import com.peergreen.security.UsernamePasswordAuthenticateService;
-import com.peergreen.security.principal.RoleGroup;
-import com.peergreen.security.principal.RolePrincipal;
-import com.peergreen.security.principal.UserPrincipal;
 import com.peergreen.webconsole.Constants;
-import com.peergreen.webconsole.ISecurityManager;
 import com.peergreen.webconsole.core.context.BaseUIContext;
 import com.peergreen.webconsole.core.extension.ExtensionFactory;
 import com.peergreen.webconsole.core.extension.InstanceHandle;
@@ -53,6 +48,11 @@ import com.peergreen.webconsole.core.scope.Scope;
 import com.peergreen.webconsole.core.scope.ScopeFactory;
 import com.peergreen.webconsole.core.security.SecurityManager;
 import com.peergreen.webconsole.navigator.NavigableModel;
+import com.peergreen.webconsole.security.AuthenticateService;
+import com.peergreen.webconsole.security.ISecurityManager;
+import com.peergreen.webconsole.security.RoleGroup;
+import com.peergreen.webconsole.security.RolePrincipal;
+import com.peergreen.webconsole.security.UserPrincipal;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -188,7 +188,7 @@ public class BaseUI extends UI implements Serializable {
      * Authentication service
      */
     @Requires
-    private UsernamePasswordAuthenticateService authenticateService;
+    private AuthenticateService authenticateService;
 
     public BaseUI() {
         // empty public no-args constructor
