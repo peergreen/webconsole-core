@@ -11,12 +11,15 @@
 
 package com.peergreen.webconsole.core.vaadin7;
 
-import com.vaadin.server.SessionDestroyEvent;
-import com.vaadin.server.SessionDestroyListener;
-import com.vaadin.server.UIClassSelectionEvent;
-import com.vaadin.server.UICreateEvent;
-import com.vaadin.server.UIProvider;
-import com.vaadin.ui.UI;
+import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
+import static com.peergreen.webconsole.Constants.REQUIRES_FILTER;
+import static com.peergreen.webconsole.Constants.SCOPE_EXTENSION_POINT;
+import static com.peergreen.webconsole.Constants.UI_ID;
+
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -30,15 +33,12 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-
-import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
-import static com.peergreen.webconsole.Constants.REQUIRES_FILTER;
-import static com.peergreen.webconsole.Constants.SCOPE_EXTENSION_POINT;
-import static com.peergreen.webconsole.Constants.UI_ID;
+import com.vaadin.server.SessionDestroyEvent;
+import com.vaadin.server.SessionDestroyListener;
+import com.vaadin.server.UIClassSelectionEvent;
+import com.vaadin.server.UICreateEvent;
+import com.vaadin.server.UIProvider;
+import com.vaadin.ui.UI;
 
 /**
  * Vaadin Base console UI provider
