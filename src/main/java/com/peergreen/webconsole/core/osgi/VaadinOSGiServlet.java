@@ -58,4 +58,10 @@ public class VaadinOSGiServlet extends VaadinServlet {
 
         return service;
     }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        this.provider = null;
+    }
 }
