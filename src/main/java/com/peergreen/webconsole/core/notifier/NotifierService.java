@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 
 import com.peergreen.webconsole.HelpOverlay;
@@ -52,23 +53,37 @@ public class NotifierService implements InternalNotifierService, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private List<HelpOverlay> overlays = new ArrayList<>();
-    private Map<com.vaadin.ui.Component, ScopeButton> scopesButtons = new ConcurrentHashMap<>();
-    private Map<UI, NotificationButton> notificationButtons = new ConcurrentHashMap<>();
-    private Map<UI, HorizontalLayout> tasksBars = new ConcurrentHashMap<>();
-    private ConcurrentLinkedDeque<Notification> notifications = new ConcurrentLinkedDeque<>();
-    private Queue<BaseTask> tasks = new ConcurrentLinkedQueue<>();
+    private final List<HelpOverlay> overlays = new ArrayList<>();
+    private final Map<com.vaadin.ui.Component, ScopeButton> scopesButtons = new ConcurrentHashMap<>();
+    private final Map<UI, NotificationButton> notificationButtons = new ConcurrentHashMap<>();
+    private final Map<UI, HorizontalLayout> tasksBars = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedDeque<Notification> notifications = new ConcurrentLinkedDeque<>();
+    private final Queue<BaseTask> tasks = new ConcurrentLinkedQueue<>();
     private BaseTask currentTask;
 
     /**
      * Close all overlays
      */
+    @Override
     public void closeAll() {
         for (HelpOverlay overlay : overlays) {
             overlay.close();
         }
         overlays.clear();
     }
+
+
+    @Invalidate
+    private void cleanup() {
+        this.notificationButtons.clear();
+        this.scopesButtons.clear();
+        this.tasksBars.clear();
+        this.notifications.clear();
+        this.tasks.clear();
+        closeAll();
+
+    }
+
 
     /**
      * {@inheritDoc}
@@ -168,6 +183,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public HelpOverlay createHelpOverlay(String caption, String text) {
         HelpOverlay o = new HelpOverlay();
         o.setCaption(caption);
@@ -180,6 +196,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addScopeButton(com.vaadin.ui.Component scope, Button button, UI ui, boolean notify) {
         scopesButtons.put(scope, new ScopeButton(button, ui, 0));
         if (notify) {
@@ -190,6 +207,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void removeScopeButton(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
             scopesButtons.remove(scope);
@@ -222,6 +240,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void hideScopeButton(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope)) {
             scopesButtons.get(scope).getButton().setVisible(false);
@@ -233,6 +252,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
      *
      * @param scope
      */
+    @Override
     public void removeBadge(com.vaadin.ui.Component scope) {
         updateBadge(scope, 0);
         scopesButtons.get(scope).getButton().setHtmlContentAllowed(true);
@@ -244,6 +264,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void incrementBadge(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope) && scopesButtons.get(scope).getButton().isAttached()) {
             updateBadge(scope, +1);
@@ -260,6 +281,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void decrementBadge(com.vaadin.ui.Component scope) {
         if (scopesButtons.containsKey(scope) && scopesButtons.get(scope).getButton().isAttached()) {
             updateBadge(scope, -1);
@@ -427,7 +449,7 @@ public class NotifierService implements InternalNotifierService, Serializable {
     private class NotificationClickListener implements Button.ClickListener {
         private boolean opened = false;
 
-        private VerticalLayout layout;
+        private final VerticalLayout layout;
 
         public NotificationClickListener(VerticalLayout layout) {
             this.layout = layout;
