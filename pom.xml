@@ -14,11 +14,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>com.peergreen.webconsole</groupId>
-    <artifactId>webconsole-pom</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <groupId>com.peergreen</groupId>
+    <artifactId>peergreen-pom</artifactId>
+    <version>3.1</version>
   </parent>
 
+  <groupId>com.peergreen.webconsole</groupId>
   <artifactId>web-console-core</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>Peergreen Web Console :: Core</name>
@@ -28,26 +29,12 @@
     <dependency>
       <groupId>com.peergreen.webconsole</groupId>
       <artifactId>web-console-api</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.vaadin</groupId>
       <artifactId>vaadin-server</artifactId>
-      <version>${vaadin.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-client-compiled</artifactId>
-      <scope>provided</scope>
-      <version>${vaadin.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.vaadin</groupId>
-      <artifactId>vaadin-push</artifactId>
-      <version>${vaadin.version}</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.ow2.spec.ee</groupId>
@@ -99,5 +86,17 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.peergreen.webconsole</groupId>
+        <artifactId>web-console-bom</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
 </project>
