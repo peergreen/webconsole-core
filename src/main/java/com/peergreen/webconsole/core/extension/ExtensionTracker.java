@@ -108,7 +108,7 @@ public class ExtensionTracker implements TrackerCustomizer {
     public void addedService(ServiceReference reference) {
         // get extension factory
         Factory factory = (Factory) bundleContext.getService(reference);
-        String className = factory.getClassName();
+        String className = factory.getComponentDescription().getFactory().getClassName();
         Class<?> extensionClass;
         try {
             extensionClass = factory.getBundleContext().getBundle().loadClass(className);
