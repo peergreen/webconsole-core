@@ -120,7 +120,7 @@ public class LinkDependencyCallback extends DependencyCallback {
      * Update scope button badges
      */
     private void updateNotifier() {
-        if (notifierService != null) {
+        if (notifierService != null && ui.isAttached()) {
             if (m_methodObj.isAnnotationPresent(Link.class)) {
                 notifierService.incrementBadge((Component) manager.getPojoObject());
             } else if (m_methodObj.isAnnotationPresent(Unlink.class)) {
