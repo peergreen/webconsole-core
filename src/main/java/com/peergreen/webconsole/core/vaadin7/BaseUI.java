@@ -33,7 +33,6 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
-import org.apache.felix.ipojo.annotations.Validate;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
@@ -181,7 +180,6 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Notifier service
      */
-    @Requires
     private InternalNotifierService notifierService;
 
     /**
@@ -208,9 +206,15 @@ public class BaseUI extends UI implements Serializable {
         this.viewNavigator = new BaseViewNavigator(new Navigator(this, content), rootNavigableModel);
     }
 
-    @Validate
-    public void start() {
+    @Bind
+    public void bindNotifierService(InternalNotifierService notifierService) {
+        this.notifierService = notifierService;
         viewNavigator.setNotifierService(notifierService);
+    }
+
+    @Unbind
+    public void unbindNotifierService(InternalNotifierService notifierService) {
+        this.notifierService = null;
     }
 
     @Invalidate
