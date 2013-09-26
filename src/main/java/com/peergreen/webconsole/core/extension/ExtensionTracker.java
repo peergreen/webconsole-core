@@ -11,8 +11,13 @@
 
 package com.peergreen.webconsole.core.extension;
 
-import com.peergreen.webconsole.Constants;
-import com.peergreen.webconsole.ExtensionPoint;
+import static java.lang.String.format;
+
+import javax.annotation.security.RolesAllowed;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -32,13 +37,8 @@ import org.osgi.framework.ServiceReference;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
-import javax.annotation.security.RolesAllowed;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-
-import static java.lang.String.format;
+import com.peergreen.webconsole.Constants;
+import com.peergreen.webconsole.ExtensionPoint;
 
 /**
  * Extension tracker

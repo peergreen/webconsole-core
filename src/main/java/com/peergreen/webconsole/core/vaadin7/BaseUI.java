@@ -159,7 +159,7 @@ public class BaseUI extends UI implements Serializable {
     private Map<String, Scope> scopes = new ConcurrentHashMap<>();
 
     /**
-     * SecuredConsole name
+     * Console name
      */
     private String consoleName;
     private Boolean enableSecurity;
@@ -661,17 +661,13 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Format console title
      *
-     * @param title
-     * @return
+     * @param title title
+     * @return format title
      */
     private String formatTitle(String title) {
-        String[] words = title.split(" ");
         StringBuilder sb = new StringBuilder();
         sb.append("<center><span>");
-        for (String word : words) {
-            sb.append(word);
-            sb.append("<br />");
-        }
+        sb.append(title);
         sb.append("</span></center>");
         return sb.toString();
     }
@@ -834,7 +830,7 @@ public class BaseUI extends UI implements Serializable {
 
         public SidebarView() {
             addStyleName("sidebar");
-            setWidth(null);
+            setWidth("115px");
             setHeight(MAX_HEIGHT);
 
             // Branding element
@@ -876,23 +872,16 @@ public class BaseUI extends UI implements Serializable {
             addComponent(userName);
 
             if (!ANONYMOUS_USER.equals(securityManager.getUserName())) {
-                MenuBar.Command cmd = new MenuBar.Command() {
-                    @Override
-                    public void menuSelected(
-                            MenuBar.MenuItem selectedItem) {
-                        Notification
-                                .show("Not implemented yet");
-                    }
-                };
-                MenuBar settings = new MenuBar();
-                MenuBar.MenuItem settingsMenu = settings.addItem("",
-                        null);
-                settingsMenu.setStyleName("icon-cog");
-                settingsMenu.addItem("Settings", cmd);
-                settingsMenu.addItem("Preferences", cmd);
-                settingsMenu.addSeparator();
-                settingsMenu.addItem("My Account", cmd);
+                Button settings = new NativeButton("Settings");
+                settings.addStyleName("icon-cog");
+                settings.setDescription("Settings");
                 addComponent(settings);
+                settings.addClickListener(new Button.ClickListener() {
+                    @Override
+                    public void buttonClick(Button.ClickEvent clickEvent) {
+                        Notification.show("Not implemented yet");
+                    }
+                });
 
                 Button exit = new NativeButton("Exit");
                 exit.addStyleName("icon-cancel");
@@ -928,12 +917,6 @@ public class BaseUI extends UI implements Serializable {
             toolbar.setSpacing(true);
             toolbar.addStyleName("toolbar");
 
-            Image logo = new Image(
-                    null,
-                    new ThemeResource("img/logo-peergreen.png"));
-            toolbar.addComponent(logo);
-            toolbar.setComponentAlignment(logo, Alignment.MIDDLE_LEFT);
-
             toolbar.addComponent(tasksBar);
             toolbar.setComponentAlignment(tasksBar, Alignment.MIDDLE_LEFT);
             toolbar.setExpandRatio(tasksBar, 1);
@@ -966,6 +949,25 @@ public class BaseUI extends UI implements Serializable {
             content.setSizeFull();
             content.addStyleName("view-content");
             setExpandRatio(content, 1.5f);
+
+            HorizontalLayout infoBar = new HorizontalLayout();
+            infoBar.setWidth(MAX_WIDTH);
+            infoBar.setHeight("34px");
+            infoBar.setSpacing(true);
+            infoBar.addStyleName("toolbar");
+
+            Label poweredBy = new Label("Powered by Peergreen. This is a trial version.");
+            infoBar.addComponent(poweredBy);
+            infoBar.setComponentAlignment(poweredBy, Alignment.MIDDLE_LEFT);
+
+            Image logo = new Image(
+                    null,
+                    new ThemeResource("img/logo-peergreen.png"));
+            logo.setHeight("25px");
+            infoBar.addComponent(logo);
+            infoBar.setComponentAlignment(logo, Alignment.MIDDLE_RIGHT);
+
+            addComponent(infoBar);
         }
     }
 

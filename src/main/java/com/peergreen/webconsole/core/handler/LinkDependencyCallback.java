@@ -11,11 +11,7 @@
 
 package com.peergreen.webconsole.core.handler;
 
-import com.peergreen.webconsole.Link;
-import com.peergreen.webconsole.Unlink;
-import com.peergreen.webconsole.core.notifier.InternalNotifierService;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.UI;
+import java.lang.reflect.InvocationTargetException;
 
 import org.apache.felix.ipojo.InstanceManager;
 import org.apache.felix.ipojo.handlers.dependency.Dependency;
@@ -23,7 +19,11 @@ import org.apache.felix.ipojo.handlers.dependency.DependencyCallback;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
-import java.lang.reflect.InvocationTargetException;
+import com.peergreen.webconsole.Link;
+import com.peergreen.webconsole.Unlink;
+import com.peergreen.webconsole.core.notifier.InternalNotifierService;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 
 /**
  * @author Mohammed Boukada

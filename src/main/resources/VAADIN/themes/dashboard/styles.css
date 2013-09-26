@@ -5377,6 +5377,7 @@ body .dashboard.v-app-loading {
 	padding: 0 20px 0 20px;
 	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 	background: #414243 url(img/sidebar-gradient.png) repeat-y top right;
+	-webkit-font-smoothing: antialiased;
 }
 
 .dashboard .toolbar .v-button {
