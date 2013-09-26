@@ -60,6 +60,8 @@ import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.server.Page;
+import com.vaadin.server.SessionDestroyEvent;
+import com.vaadin.server.SessionDestroyListener;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinService;
@@ -337,6 +339,12 @@ public class BaseUI extends UI implements Serializable {
                 defaultSubject.setReadOnly();
                 securityManager = new SecurityManager(defaultSubject);
                 getSession().setAttribute("security.manager", securityManager);
+                getSession().getService().addSessionDestroyListener(new SessionDestroyListener() {
+                    @Override
+                    public void sessionDestroy(SessionDestroyEvent sessionDestroyEvent) {
+                        sessionDestroyEvent.getSession().getSession().removeAttribute("security.manager");
+                    }
+                });
             }
             buildMainView();
         } else {
