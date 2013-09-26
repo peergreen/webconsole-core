@@ -75,11 +75,10 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.NativeButton;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.ProgressIndicator;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.UIDetachedException;
@@ -147,7 +146,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Progress indicator
      */
-    private ProgressIndicator progressIndicator = new ProgressIndicator(new Float(0.0));
+    private ProgressBar progressIndicator = new ProgressBar(new Float(0.0));
 
     private int nbScopesToBind = 0;
 
@@ -634,7 +633,6 @@ public class BaseUI extends UI implements Serializable {
         } else {
             TimeOutThread timeOutThread = new TimeOutThread();
             timeOutThread.start();
-            progressIndicator.setPollingInterval(200);
             progressIndicator.addValueChangeListener(new Property.ValueChangeListener() {
                 @Override
                 public void valueChange(Property.ValueChangeEvent event) {
