@@ -111,6 +111,8 @@ public class BaseUI extends UI implements Serializable {
 
     public static final String HOME_SCOPE = "home";
 
+    public static final String DEFAULT_SCOPE_CLASSNAME = "icon-th-large";
+
     public static final String HOME_ALIAS = "/" + HOME_SCOPE;
 
     /**
@@ -289,7 +291,7 @@ public class BaseUI extends UI implements Serializable {
     public void bindScopeView(Component scopeView, Dictionary props) {
         String scopeName = (String) props.get("scope.value");
         Object iconClass = props.get("scope.iconClass");
-        String scopeIconClass = (iconClass == null || "".equals(iconClass)) ? "icon-" + scopeName : (String) props.get("scope.iconClass");
+        String scopeIconClass = (iconClass == null || "".equals(iconClass)) ? DEFAULT_SCOPE_CLASSNAME : (String) props.get("scope.iconClass");
         String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
         Scope scope = new Scope(scopeName, scopeAlias, scopeIconClass, scopeView);
         scopes.put(scopeAlias, scope);
