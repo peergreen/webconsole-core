@@ -16,7 +16,6 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.StaticServiceProperty;
 
 import com.peergreen.webconsole.Constants;
-import com.peergreen.webconsole.IConsole;
 
 /**
  * Peergreen Administration Secured Console
@@ -26,5 +25,5 @@ import com.peergreen.webconsole.IConsole;
 @Component(name = Constants.PRODUCTION_MODE_CONSOLE_PID)
 @Provides(properties = {@StaticServiceProperty(name = Constants.CONSOLE_NAME, type = "java.lang.String", mandatory = true),
         @StaticServiceProperty(name = Constants.CONSOLE_ALIAS, type = "java.lang.String", mandatory = true)})
-public class ProductionConsole implements IConsole {
+public class ProductionConsole implements Console {
 }
