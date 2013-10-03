@@ -26,6 +26,7 @@ import com.peergreen.webconsole.Constants;
 @Provides(properties = {@StaticServiceProperty(name = Constants.CONSOLE_NAME, type = "java.lang.String", mandatory = true),
         @StaticServiceProperty(name = Constants.CONSOLE_ALIAS, type = "java.lang.String", mandatory = true),
         @StaticServiceProperty(name = Constants.CONSOLE_DOMAINS, type = "java.lang.String[]", mandatory = true),
+        @StaticServiceProperty(name = Constants.SECURITY_SERVICE_PID, type = "java.lang.String", mandatory = false),
         @StaticServiceProperty(name = Constants.DEFAULT_ROLES, type = "java.lang.String[]", mandatory = false)})
 public class DevelopmentConsole implements Console {
 }

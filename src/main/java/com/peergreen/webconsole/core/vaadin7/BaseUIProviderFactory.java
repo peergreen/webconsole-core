@@ -64,7 +64,10 @@ public class BaseUIProviderFactory implements UIProviderFactory {
         String consoleId = (String) properties.get("instance.name");
         String consoleName = (String) properties.get(Constants.CONSOLE_NAME);
         String consoleAlias = (String) properties.get(Constants.CONSOLE_ALIAS);
-        Boolean enableSecurity = (Boolean) properties.get(Constants.ENABLE_SECURITY);
+        String securityServicePid = (String) properties.get(Constants.SECURITY_SERVICE_PID);
+        if (securityServicePid == null && Constants.PRODUCTION_MODE_CONSOLE_PID.equals(properties.get("factory.name"))) {
+            securityServicePid = "com.peergreen.webconsole.security.simple.internal.SimpleAuthenticateService";
+        }
         String[] defaultRoles = (String[]) properties.get(Constants.DEFAULT_ROLES);
         if (defaultRoles == null) {
             defaultRoles = new String[0];
@@ -77,7 +80,7 @@ public class BaseUIProviderFactory implements UIProviderFactory {
             provider.setConsoleId(consoleId);
             provider.setConsoleName(consoleName);
             provider.setConsoleAlias(consoleAlias);
-            provider.setEnableSecurity(enableSecurity);
+            provider.setSecurityServicePid(securityServicePid);
             provider.setDefaultRoles(Arrays.asList(defaultRoles));
             provider.setDomains(Arrays.asList(consoleDomains));
 

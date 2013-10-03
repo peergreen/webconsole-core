@@ -25,6 +25,7 @@ import com.peergreen.webconsole.Constants;
 @Component(name = Constants.PRODUCTION_MODE_CONSOLE_PID)
 @Provides(properties = {@StaticServiceProperty(name = Constants.CONSOLE_NAME, type = "java.lang.String", mandatory = true),
         @StaticServiceProperty(name = Constants.CONSOLE_ALIAS, type = "java.lang.String", mandatory = true),
+        @StaticServiceProperty(name = Constants.SECURITY_SERVICE_PID, type = "java.lang.String", mandatory = false),
         @StaticServiceProperty(name = Constants.CONSOLE_DOMAINS, type = "java.lang.String[]", mandatory = true)})
 public class ProductionConsole implements Console {
 }

@@ -30,7 +30,6 @@ import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
@@ -237,7 +236,6 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Authentication service
      */
-    @Requires
     private AuthenticateService authenticateService;
 
     public BaseUI() {
@@ -281,6 +279,16 @@ public class BaseUI extends UI implements Serializable {
     @Unbind
     public void unbindNotifierService(InternalNotifierService notifierService) {
         this.notifierService = null;
+    }
+
+    @Bind
+    public void bindAuthenticateService(AuthenticateService authenticateService) {
+        this.authenticateService = authenticateService;
+    }
+
+    @Unbind
+    public void unbindAuthenticateService(AuthenticateService authenticateService) {
+        this.authenticateService = null;
     }
 
     @Invalidate
@@ -602,12 +610,16 @@ public class BaseUI extends UI implements Serializable {
      * @return True if the user was authenticated, false otherwise.
      */
     private boolean authenticate(String username, String password) {
-        Subject subject = authenticateService.authenticate(username, password);
-        if (subject != null) {
-            securityManager = new SecurityManager(subject);
-            getSession().setAttribute("is.logged", true);
-            getSession().setAttribute("security.manager", securityManager);
-            return true;
+        if (authenticateService != null) {
+            Subject subject = authenticateService.authenticate(username, password);
+            if (subject != null) {
+                securityManager = new SecurityManager(subject);
+                getSession().setAttribute("is.logged", true);
+                getSession().setAttribute("security.manager", securityManager);
+                return true;
+            }
+        } else {
+            Notification.show("There is no authentication service. Please review your configuration");
         }
         return false;
     }

@@ -58,7 +58,7 @@ public class BaseUIProvider extends UIProvider {
     private String consoleId;
     private String consoleName;
     private String consoleAlias;
-    private Boolean enableSecurity;
+    private String securityServicePid;
     private List<String> defaultRoles;
     private List<String> domains;
 
@@ -99,10 +99,10 @@ public class BaseUIProvider extends UIProvider {
 
     /**
      * Enable security
-     * @param enableSecurity boolean
+     * @param securityServicePid security service pid
      */
-    public void setEnableSecurity(Boolean enableSecurity) {
-        this.enableSecurity = enableSecurity;
+    public void setSecurityServicePid(String securityServicePid) {
+        this.securityServicePid = securityServicePid;
     }
 
     /**
@@ -138,7 +138,7 @@ public class BaseUIProvider extends UIProvider {
         try {
             // Create an instance of baseUI
             String uiId = consoleAlias + "-" + i;
-            ui = new BaseUI(SCOPE_EXTENSION_POINT, uiId, enableSecurity);
+            ui = new BaseUI(SCOPE_EXTENSION_POINT, uiId, securityServicePid != null);
             ui.setConsoleId(consoleId);
             ui.setConsoleName(consoleName);
             ui.setDefaultRoles(defaultRoles);
@@ -149,6 +149,9 @@ public class BaseUIProvider extends UIProvider {
             Dictionary<String, Object> bindFilters = new Hashtable<>();
             bindFilters.put("ScopeView", String.format("(&(%s=%s)(%s=%s))", UI_ID, uiId, EXTENSION_POINT, SCOPE_EXTENSION_POINT));
             bindFilters.put("NotifierService", String.format("(%s=%s)", CONSOLE_ID, consoleId));
+            if (securityServicePid != null) {
+                bindFilters.put("AuthenticateService", String.format("(%s=%s)", "factory.name", securityServicePid));
+            }
             props.put(REQUIRES_FILTER, bindFilters);
 
             // Create ipojo component from its factory
