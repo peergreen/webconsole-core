@@ -11,8 +11,11 @@
 
 package com.peergreen.webconsole.core.vaadin7;
 
-import com.peergreen.webconsole.Constants;
-import com.vaadin.server.UIProvider;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -26,11 +29,8 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import com.peergreen.webconsole.Constants;
+import com.vaadin.server.UIProvider;
 
 /**
  * Vaadin UI provider factory
@@ -61,6 +61,7 @@ public class BaseUIProviderFactory implements UIProviderFactory {
     @Override
     public UIProvider createUIProvider(Dictionary properties) {
         BaseUIProvider provider = null;
+        String consoleId = (String) properties.get("instance.name");
         String consoleName = (String) properties.get(Constants.CONSOLE_NAME);
         String consoleAlias = (String) properties.get(Constants.CONSOLE_ALIAS);
         Boolean enableSecurity = (Boolean) properties.get(Constants.ENABLE_SECURITY);
@@ -68,14 +69,17 @@ public class BaseUIProviderFactory implements UIProviderFactory {
         if (defaultRoles == null) {
             defaultRoles = new String[0];
         }
+        String[] consoleDomains = (String[]) properties.get(Constants.CONSOLE_DOMAINS);
 
         try {
             // Create an instance of base console UI provider
             provider = new BaseUIProvider();
+            provider.setConsoleId(consoleId);
             provider.setConsoleName(consoleName);
             provider.setConsoleAlias(consoleAlias);
             provider.setEnableSecurity(enableSecurity);
             provider.setDefaultRoles(Arrays.asList(defaultRoles));
+            provider.setDomains(Arrays.asList(consoleDomains));
 
             // Configuration properties for ipojo component
             Properties props = new Properties();

@@ -39,6 +39,7 @@ import org.ow2.util.log.LogFactory;
 
 import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.ExtensionPoint;
+import com.peergreen.webconsole.Scope;
 
 /**
  * Extension tracker
@@ -114,6 +115,7 @@ public class ExtensionTracker implements TrackerCustomizer {
             extensionClass = factory.getBundleContext().getBundle().loadClass(className);
             String extensionPoint = "";
             String[] roles = {};
+            String[] domains = {};
             if (extensionClass.isAnnotationPresent(ExtensionPoint.class)) {
                 ExtensionPoint properties = extensionClass.getAnnotation(ExtensionPoint.class);
                 extensionPoint = properties.value();
@@ -122,12 +124,17 @@ public class ExtensionTracker implements TrackerCustomizer {
                 RolesAllowed rolesAllowed = extensionClass.getAnnotation(RolesAllowed.class);
                 roles = rolesAllowed.value();
             }
+            if (extensionClass.isAnnotationPresent(Scope.class)) {
+                Scope scope = extensionClass.getAnnotation(Scope.class);
+                domains = scope.domains();
+            }
 
             BaseExtensionFactory baseExtensionFactory = new BaseExtensionFactory(factory);
             Dictionary<String, Object> properties = new Hashtable<>();
             properties.put("instance.object", baseExtensionFactory);
             properties.put(Constants.EXTENSION_POINT, extensionPoint);
             properties.put(Constants.EXTENSION_ROLES, roles);
+            properties.put(Constants.CONSOLE_DOMAINS, domains);
             instances.put(reference, extensionFactory.createComponentInstance(properties));
         } catch (ClassNotFoundException | MissingHandlerException | ConfigurationException | UnacceptableConfiguration e) {
             LOGGER.error(e.getMessage(), e);

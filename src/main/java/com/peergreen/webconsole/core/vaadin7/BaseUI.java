@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -106,19 +105,35 @@ public class BaseUI extends UI implements Serializable {
 
     private static final String ANONYMOUS_USER = "Anonymous";
 
-    private static final String MAX_WIDTH = "100%";
-    private static final String MAX_HEIGHT = "100%";
-
-    public static final String HOME_SCOPE = "home";
-
-    public static final String DEFAULT_SCOPE_CLASSNAME = "icon-th-large";
-
-    public static final String HOME_ALIAS = "/" + HOME_SCOPE;
-
     /**
      * Logger.
      */
     private static final Log LOGGER = LogFactory.getLog(BaseUI.class);
+
+    /**
+     * Max component width
+     */
+    private static final String MAX_WIDTH = "100%";
+
+    /**
+     * Max component height
+     */
+    private static final String MAX_HEIGHT = "100%";
+
+    /**
+     * Home scope name
+     */
+    public static final String HOME_SCOPE = "home";
+
+    /**
+     * Home scope alias
+     */
+    public static final String HOME_ALIAS = "/" + HOME_SCOPE;
+
+    /**
+     * Default scope icon class
+     */
+    public static final String DEFAULT_SCOPE_CLASSNAME = "icon-th-large";
 
     /**
      * Root layout
@@ -140,6 +155,9 @@ public class BaseUI extends UI implements Serializable {
      */
     private CssLayout content = new CssLayout();
 
+    /**
+     * Notifications windows
+     */
     private Window notifications;
 
     /**
@@ -152,27 +170,58 @@ public class BaseUI extends UI implements Serializable {
      */
     private ProgressBar progressIndicator = new ProgressBar(new Float(0.0));
 
+    /**
+     * Number of scopes to bind on bootstrap
+     */
     private int nbScopesToBind = 0;
 
     /**
      * Scopes bound
      */
     private Map<ExtensionFactory, ScopeFactory> scopesFactories = new ConcurrentHashMap<>();
+
+    /**
+     * Scopes
+     */
     private Map<String, Scope> scopes = new ConcurrentHashMap<>();
 
+    /**
+     * Console Id
+     */
+    private String consoleId;
     /**
      * Console name
      */
     private String consoleName;
+
+    /**
+     * Enable security
+     */
     private Boolean enableSecurity;
+
+    /**
+     * Default roles for default user (development mode)
+     */
     private List<String> defaultRoles;
 
+    /**
+     * Console domains
+     */
+    private List<String> domains;
+
+    /**
+     * Scope extension point label
+     */
     private String scopeExtensionPoint;
 
     /**
      * Security manager
      */
     private ISecurityManager securityManager;
+
+    /**
+     * View navigator
+     */
     private BaseViewNavigator viewNavigator;
 
     /**
@@ -198,15 +247,29 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Base console UI constructor
      */
-    public BaseUI(String consoleName, String extensionPoint, String uiId, Boolean enableSecurity, List<String> defaultRoles) {
-        this.consoleName = consoleName;
+    public BaseUI(String extensionPoint, String uiId, Boolean enableSecurity) {
         this.scopeExtensionPoint = extensionPoint;
         this.uiId = uiId;
         this.enableSecurity = enableSecurity;
-        this.defaultRoles = defaultRoles;
 
         NavigableModel rootNavigableModel = new NavigableModel(null, "", null, null);
         this.viewNavigator = new BaseViewNavigator(new Navigator(this, content), rootNavigableModel);
+    }
+
+    public void setConsoleId(String consoleId) {
+        this.consoleId = consoleId;
+    }
+
+    public void setConsoleName(String consoleName) {
+        this.consoleName = consoleName;
+    }
+
+    public void setDefaultRoles(List<String> defaultRoles) {
+        this.defaultRoles = defaultRoles;
+    }
+
+    public void setDomains(List<String> domains) {
+        this.domains = domains;
     }
 
     @Bind
@@ -235,7 +298,8 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Bind a scope factory
      *
-     * @param extensionFactory
+     * @param extensionFactory extension factory
+     * @param props extension properties
      */
     @Bind(aggregate = true, optional = true)
     public void bindExtensionFactory(ExtensionFactory extensionFactory, Dictionary props) {
@@ -244,10 +308,10 @@ public class BaseUI extends UI implements Serializable {
             String[] roles = (String[]) props.get(Constants.EXTENSION_ROLES);
             List<String> listRoles = (roles == null) ? new ArrayList<String>() : Arrays.asList(roles);
             ScopeFactory scopeFactory = new ScopeFactory(listRoles);
-            if (progressIndicator.getValue() >= 1 && isAllowedToShowScope(listRoles)) {
+            if (progressIndicator.getValue() >= 1) {
                 boolean failed = false;
                 try {
-                    InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
+                    InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId, consoleId));
                     if (InstanceState.STOPPED.equals(instance.getState())) {
                         failed = true;
                     }
@@ -270,7 +334,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Unbind a scope factory
      *
-     * @param extensionFactory
+     * @param extensionFactory extension factory
      */
     @Unbind
     public void unbindExtensionFactory(ExtensionFactory extensionFactory) {
@@ -282,14 +346,48 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Whether the extension factory is compatible with this UI console
+     * @param props extension properties
+     * @return true if the extension is compatible, false otherwise.
+     */
     private boolean canAddExtensionFactory(Dictionary props) {
+        // First, test if the extension point is the wanted one
         String extensionId = (String) props.get(Constants.EXTENSION_POINT);
-        return extensionId != null && scopeExtensionPoint.equals(extensionId);
+        if (extensionId == null || !scopeExtensionPoint.equals(extensionId)) {
+            return false;
+        }
+
+        // Test if extension roles allowed are compatible with the logged user
+        String[] roles = (String[]) props.get(Constants.EXTENSION_ROLES);
+        if (roles != null) {
+            if (securityManager != null && !securityManager.isUserInRoles(Arrays.asList(roles))) {
+                return false;
+            }
+        }
+
+        // Test if the scope targets this console
+        String[] domains = (String[]) props.get(Constants.CONSOLE_DOMAINS);
+        if (domains != null) {
+            for (String domain : domains) {
+                if (this.domains.contains(domain)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
+    /**
+     * Bind scope view. <br />
+     * Filtering was done on {@link #bindExtensionFactory(com.peergreen.webconsole.core.extension.ExtensionFactory, java.util.Dictionary)},
+     * this method is called for the authorized scopes.
+     * @param scopeView scope view
+     * @param props scope properties
+     */
     @Bind(aggregate = true, optional = true)
     public void bindScopeView(Component scopeView, Dictionary props) {
-        String scopeName = (String) props.get("scope.value");
+        String scopeName = (String) props.get("scope.name");
         Object iconClass = props.get("scope.iconClass");
         String scopeIconClass = (iconClass == null || "".equals(iconClass)) ? DEFAULT_SCOPE_CLASSNAME : (String) props.get("scope.iconClass");
         String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
@@ -299,6 +397,11 @@ public class BaseUI extends UI implements Serializable {
         addScopeButtonInMenu(scope, progressIndicator.getValue() >= 1);
     }
 
+    /**
+     * Unbind scope view
+     * @param scopeView scope view
+     * @param props scope properties
+     */
     @Unbind
     public void unbindScopeView(Component scopeView, Dictionary props) {
         String scopeAlias = (String) props.get(Constants.EXTENSION_ALIAS);
@@ -310,7 +413,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Init UI
      *
-     * @param request
+     * @param request vaadin request
      */
     @Override
     protected void init(VaadinRequest request) {
@@ -492,6 +595,12 @@ public class BaseUI extends UI implements Serializable {
         return null;
     }
 
+    /**
+     * Authenticate a user
+     * @param username user name
+     * @param password user password
+     * @return True if the user was authenticated, false otherwise.
+     */
     private boolean authenticate(String username, String password) {
         Subject subject = authenticateService.authenticate(username, password);
         if (subject != null) {
@@ -535,17 +644,9 @@ public class BaseUI extends UI implements Serializable {
 
         menu.removeAllComponents();
 
-        //Compute nb scopes to bind
-        Map<ExtensionFactory, ScopeFactory> scopesToBind = new HashMap<>();
-        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
-            if (isAllowedToShowScope(scopeFactoryEntry.getValue().getRoles())) {
-                scopesToBind.put(scopeFactoryEntry.getKey(), scopeFactoryEntry.getValue());
-            }
-        }
-        nbScopesToBind = scopesToBind.size();
-
         // Tell scopesFactories view factories to create views
-        createScopeViews(scopesToBind);
+        nbScopesToBind = scopesFactories.size();
+        createScopeViews();
 
         // Start progress indicator
         root.removeAllComponents();
@@ -564,29 +665,27 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Create scopes views
      *
-     * @param scopesToBind scope to bound
      */
-    private void createScopeViews(Map<ExtensionFactory, ScopeFactory> scopesToBind) {
-        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesToBind.entrySet()) {
-            if (isAllowedToShowScope(scopeFactoryEntry.getValue().getRoles())) {
-                ExtensionFactory extensionFactory = scopeFactoryEntry.getKey();
-                ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
-                boolean failed = false;
-                try {
-                    InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId));
-                    if (InstanceState.STOPPED.equals(instance.getState())) {
-                        failed = true;
-                    }
-                    scopeFactory.setInstance(instance);
-                } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
-                    LOGGER.error(e.getMessage(), e);
+    private void createScopeViews() {
+        for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
+            ExtensionFactory extensionFactory = scopeFactoryEntry.getKey();
+            ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
+            boolean failed = false;
+            try {
+                InstanceHandle instance = extensionFactory.create(new BaseUIContext(this, viewNavigator, securityManager, uiId, consoleId));
+                if (InstanceState.STOPPED.equals(instance.getState())) {
                     failed = true;
                 }
-                if (failed) {
-                    String error = "Fail to add a scope for main UI. Please see logs";
-                    if (notifierService != null) {
-                        notifierService.addNotification(error);
-                    }
+                scopeFactory.setInstance(instance);
+            } catch (MissingHandlerException | UnacceptableConfiguration | ConfigurationException e) {
+                LOGGER.error(e.getMessage(), e);
+                failed = true;
+            }
+
+            if (failed) {
+                String error = "Fail to add a scope for main UI. Please see logs";
+                if (notifierService != null) {
+                    notifierService.addNotification(error);
                 }
             }
         }
@@ -608,6 +707,9 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Build Welcome progress indicator view
+     */
     private void buildProgressIndicatorView() {
 
         final CssLayout progressPanel = new CssLayout();
@@ -641,6 +743,7 @@ public class BaseUI extends UI implements Serializable {
         if (stopValue.equals(progressIndicator.getValue())) {
             showMainContent();
         } else {
+            // We are still waiting for scopes we have requested their creation, wait a while.
             TimeOutThread timeOutThread = new TimeOutThread();
             timeOutThread.start();
             progressIndicator.addValueChangeListener(new Property.ValueChangeListener() {
@@ -664,6 +767,9 @@ public class BaseUI extends UI implements Serializable {
         progressIndicatorLayout.setComponentAlignment(progressPanel, Alignment.MIDDLE_CENTER);
     }
 
+    /**
+     * Show main view
+     */
     protected void showMainContent() {
         removeStyleName("login");
         root.removeAllComponents();
@@ -687,7 +793,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Add scope button in menu
      *
-     * @param scope
+     * @param scope scope
      * @param notify for notifierService to show badge
      */
     private void addScopeButtonInMenu(final Scope scope, boolean notify) {
@@ -722,7 +828,7 @@ public class BaseUI extends UI implements Serializable {
     /**
      * Remove scope button from menu
      *
-     * @param scope
+     * @param scope scope
      */
     private void removeScopeButtonInMenu(final Scope scope) {
         if (scope.getScopeMenuButton() != null) {
@@ -737,6 +843,11 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Sort scope buttons
+     * @param scopeAlias scope alias
+     * @param b scope button
+     */
     private void sortButtonsInMenu(final String scopeAlias, final Button b) {
         final LinkedList<String> scopesNames = new LinkedList<>();
         for (Map.Entry<String, Scope> scopeEntry : scopes.entrySet()) {
@@ -772,10 +883,6 @@ public class BaseUI extends UI implements Serializable {
         });
     }
 
-    private boolean isAllowedToShowScope(List<String> rolesAllowed) {
-        return securityManager == null || securityManager.isUserInRoles(rolesAllowed);
-    }
-
     @Override
     public void accessSynchronously(Runnable runnable) {
         Map<Class<?>, CurrentInstance> old = null;
@@ -806,6 +913,10 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Scopes binding time out
+     * @author Mohammed Boukada
+     */
     private class TimeOutThread extends Thread {
 
         private static final int TWO_SECONDS = 2000;
@@ -833,11 +944,19 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Set notification window position according to mouse click
+     * @param event button click event
+     */
     private void setNotificationsWindowPosition(Button.ClickEvent event) {
         notifications.setPositionX(event.getClientX() - event.getRelativeX());
         notifications.setPositionY(event.getClientY() - event.getRelativeY());
     }
 
+    /**
+     * Side bar view
+     * @author Mohammed Boukada
+     */
     private class SidebarView extends VerticalLayout {
 
         public SidebarView() {
@@ -869,6 +988,10 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Scopes menu view
+     * @author Mohammed Boukada
+     */
     private final class ScopeMenuView extends VerticalLayout {
 
         private ScopeMenuView() {
@@ -920,6 +1043,10 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Console content view
+     * @author Mohammed Boukada
+     */
     private final class ConsoleContentView extends VerticalLayout {
 
         private ConsoleContentView(final Button notify, final HorizontalLayout tasksBar) {
@@ -983,6 +1110,10 @@ public class BaseUI extends UI implements Serializable {
         }
     }
 
+    /**
+     * Notification window
+     * @author Mohammed Boukada
+     */
     private class NotificationWindow extends Window {
 
         public NotificationWindow() {

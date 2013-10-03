@@ -11,8 +11,8 @@
 
 package com.peergreen.webconsole.core.extension;
 
-import com.peergreen.webconsole.Constants;
-import com.peergreen.webconsole.UIContext;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import org.apache.felix.ipojo.ComponentInstance;
 import org.apache.felix.ipojo.ConfigurationException;
@@ -23,8 +23,8 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.ServiceProperty;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import com.peergreen.webconsole.Constants;
+import com.peergreen.webconsole.UIContext;
 
 /**
  * Extension factory. <br />
@@ -40,6 +40,8 @@ public class BaseExtensionFactory implements ExtensionFactory {
     private String extensionPoint;
     @ServiceProperty(name = Constants.EXTENSION_ROLES, mandatory = true)
     private String[] roles;
+    @ServiceProperty(name = Constants.CONSOLE_DOMAINS, mandatory = false)
+    private String[] domains;
     private Factory factory;
 
     public BaseExtensionFactory(Factory factory) {
@@ -55,6 +57,7 @@ public class BaseExtensionFactory implements ExtensionFactory {
         properties.put(Constants.EXTENSION_POINT, extensionPoint);
         properties.put(Constants.UI_CONTEXT, context);
         properties.put(Constants.EXTENSION_ROLES, roles);
+        properties.put(Constants.CONSOLE_DOMAINS, domains);
         return new BaseInstanceHandle(factory.createComponentInstance(properties));
     }
 

@@ -25,12 +25,14 @@ public class BaseUIContext implements UIContext {
     private ViewNavigator navigator;
     private ISecurityManager securityManager;
     private String uiId;
+    private String consoleId;
 
-    public BaseUIContext(UI ui, ViewNavigator navigator, ISecurityManager securityManager, String uiId) {
+    public BaseUIContext(UI ui, ViewNavigator navigator, ISecurityManager securityManager, String uiId, String consoleId) {
         this.ui = ui;
         this.navigator = navigator;
         this.securityManager = securityManager;
         this.uiId = uiId;
+        this.consoleId = consoleId;
     }
 
     /**
@@ -63,5 +65,10 @@ public class BaseUIContext implements UIContext {
     @Override
     public String getUIId() {
         return uiId;
+    }
+
+    @Override
+    public String getConsoleId() {
+        return consoleId;
     }
 }

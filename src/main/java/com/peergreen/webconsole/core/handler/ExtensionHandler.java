@@ -96,6 +96,7 @@ public class ExtensionHandler extends DependencyHandler {
 
     private Class<?> extensionType;
     private UIContext uiContext;
+    private String consoleId;
     private InstanceManager ownInstanceManager = new OwnInstanceManager();
     private InternalNotifierService notifierService;
     private List<LinkDependencyCallback> dependencyCallbacks = new ArrayList<>();
@@ -118,8 +119,10 @@ public class ExtensionHandler extends DependencyHandler {
             throw new ConfigurationException("Missing UI Context");
         }
 
+        consoleId = uiContext.getConsoleId();
         configuration.remove(UI_CONTEXT);
         configuration.put(UI_ID, uiContext.getUIId());
+        configuration.put(CONSOLE_ID, consoleId);
 
         setExtensionType();
         setExtensionProperties(configuration);
@@ -535,7 +538,7 @@ public class ExtensionHandler extends DependencyHandler {
             if (navigable != null && !"".equals(navigable.value())) {
                 alias = navigable.value();
             } else if (scope != null) {
-                alias = scope.value();
+                alias = scope.name();
             } else if ("".equals(alias)) {
                 alias = extensionType.getName();
             }

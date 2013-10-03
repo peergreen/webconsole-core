@@ -11,6 +11,7 @@
 
 package com.peergreen.webconsole.core.vaadin7;
 
+import static com.peergreen.webconsole.Constants.CONSOLE_ID;
 import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
 import static com.peergreen.webconsole.Constants.REQUIRES_FILTER;
 import static com.peergreen.webconsole.Constants.SCOPE_EXTENSION_POINT;
@@ -54,10 +55,12 @@ public class BaseUIProvider extends UIProvider {
      */
     private static final Log LOGGER = LogFactory.getLog(BaseUIProvider.class);
 
+    private String consoleId;
     private String consoleName;
     private String consoleAlias;
     private Boolean enableSecurity;
     private List<String> defaultRoles;
+    private List<String> domains;
 
     private List<ComponentInstance> uis = new ArrayList<>();
 
@@ -70,24 +73,52 @@ public class BaseUIProvider extends UIProvider {
     private int i = 0;
 
     /**
-     * Set console
+     * Set console Id
+     * @param consoleId console Id
+     */
+    public void setConsoleId(String consoleId) {
+        this.consoleId = consoleId;
+    }
+
+    /**
+     * Set console name
      *
-     * @param consoleName
+     * @param consoleName console name
      */
     public void setConsoleName(String consoleName) {
         this.consoleName = consoleName;
     }
 
+    /**
+     * Set console alias
+     * @param consoleAlias console alias
+     */
     public void setConsoleAlias(String consoleAlias) {
         this.consoleAlias = consoleAlias.substring(1);
     }
 
+    /**
+     * Enable security
+     * @param enableSecurity boolean
+     */
     public void setEnableSecurity(Boolean enableSecurity) {
         this.enableSecurity = enableSecurity;
     }
 
+    /**
+     * Default roles for default user (development mode)
+     * @param defaultRoles default roles
+     */
     public void setDefaultRoles(List<String> defaultRoles) {
         this.defaultRoles = defaultRoles;
+    }
+
+    /**
+     * Set console domains
+     * @param domains console domains
+     */
+    public void setDomains(List<String> domains) {
+        this.domains = domains;
     }
 
     /**
@@ -107,12 +138,17 @@ public class BaseUIProvider extends UIProvider {
         try {
             // Create an instance of baseUI
             String uiId = consoleAlias + "-" + i;
-            ui = new BaseUI(consoleName, SCOPE_EXTENSION_POINT, uiId, enableSecurity, defaultRoles);
+            ui = new BaseUI(SCOPE_EXTENSION_POINT, uiId, enableSecurity);
+            ui.setConsoleId(consoleId);
+            ui.setConsoleName(consoleName);
+            ui.setDefaultRoles(defaultRoles);
+            ui.setDomains(domains);
             // Configuration properties for ipojo component
             Dictionary<String, Object> props = new Hashtable<>();
             props.put("instance.object", ui);
             Dictionary<String, Object> bindFilters = new Hashtable<>();
             bindFilters.put("ScopeView", String.format("(&(%s=%s)(%s=%s))", UI_ID, uiId, EXTENSION_POINT, SCOPE_EXTENSION_POINT));
+            bindFilters.put("NotifierService", String.format("(%s=%s)", CONSOLE_ID, consoleId));
             props.put(REQUIRES_FILTER, bindFilters);
 
             // Create ipojo component from its factory

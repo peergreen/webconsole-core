@@ -18,13 +18,14 @@ import org.apache.felix.ipojo.annotations.StaticServiceProperty;
 import com.peergreen.webconsole.Constants;
 
 /**
- * Peergreen Administration Unsecured Console
+ * Peergreen Administration Development Mode Console
  *
  * @author Mohammed Boukada
  */
 @Component(name = Constants.DEVELOPMENT_MODE_CONSOLE_PID)
 @Provides(properties = {@StaticServiceProperty(name = Constants.CONSOLE_NAME, type = "java.lang.String", mandatory = true),
         @StaticServiceProperty(name = Constants.CONSOLE_ALIAS, type = "java.lang.String", mandatory = true),
+        @StaticServiceProperty(name = Constants.CONSOLE_DOMAINS, type = "java.lang.String[]", mandatory = true),
         @StaticServiceProperty(name = Constants.DEFAULT_ROLES, type = "java.lang.String[]", mandatory = false)})
 public class DevelopmentConsole implements Console {
 }
