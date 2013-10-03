@@ -23,10 +23,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.StaticServiceProperty;
 
+import com.peergreen.webconsole.Constants;
 import com.peergreen.webconsole.HelpOverlay;
 import com.peergreen.webconsole.core.notifier.utils.Notification;
 import com.peergreen.webconsole.core.notifier.utils.NotificationButton;
@@ -47,8 +48,7 @@ import com.vaadin.ui.Window;
  * @author Mohammed Boukada
  */
 @Component
-@Provides
-@Instantiate
+@Provides(properties = @StaticServiceProperty(name = Constants.CONSOLE_ID, type = "java.lang.String", mandatory = true))
 public class NotifierService implements InternalNotifierService, Serializable {
 
     private static final long serialVersionUID = 1L;

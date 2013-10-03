@@ -11,6 +11,7 @@
 
 package com.peergreen.webconsole.core.handler;
 
+import static com.peergreen.webconsole.Constants.CONSOLE_ID;
 import static com.peergreen.webconsole.Constants.EXTENSION_ALIAS;
 import static com.peergreen.webconsole.Constants.EXTENSION_POINT;
 import static com.peergreen.webconsole.Constants.EXTENSION_ROLES;
@@ -498,7 +499,7 @@ public class ExtensionHandler extends DependencyHandler {
         for (Field field : fieldsToBind) {
             Element requires = new Element("requires", null);
             requires.addAttribute(new Attribute("field", field.getName()));
-            requires.addAttribute(new Attribute("filter", String.format("(|(%s=%s)(!(%s=*)))", UI_ID, uiContext.getUIId(), UI_ID)));
+            requires.addAttribute(new Attribute("filter", String.format("(&(|(%s=%s)(!(%s=*)))(|(%s=%s)(!(%s=*))))", UI_ID, uiContext.getUIId(), UI_ID, CONSOLE_ID, uiContext.getConsoleId(), CONSOLE_ID)));
             metadata.addElement(requires);
         }
     }
@@ -510,6 +511,7 @@ public class ExtensionHandler extends DependencyHandler {
             requires.addAttribute(new Attribute("aggregate", "false"));
             requires.addAttribute(new Attribute("id", method.getName()));
             requires.addAttribute(new Attribute("specification", method.getParameterTypes()[0].getName()));
+            requires.addAttribute(new Attribute("filter", String.format("(&(|(%s=%s)(!(%s=*)))(|(%s=%s)(!(%s=*))))", UI_ID, uiContext.getUIId(), UI_ID, CONSOLE_ID, uiContext.getConsoleId(), CONSOLE_ID)));
 
             Element bindCallback = new Element("callback", null);
             bindCallback.addAttribute(new Attribute("method", method.getName()));
@@ -602,16 +604,19 @@ public class ExtensionHandler extends DependencyHandler {
         return linkDependencyCallback;
     }
 
-    @Bind(optional = true)
-    public void bindNotifierService(InternalNotifierService notifierService) {
-        this.notifierService = notifierService;
-        for (LinkDependencyCallback dependencyCallback : dependencyCallbacks) {
-            dependencyCallback.setNotifierService(notifierService);
+    @Bind(optional = true, aggregate = true)
+    public void bindNotifierService(InternalNotifierService notifierService, Dictionary properties) {
+        String consoleId = (String) properties.get(CONSOLE_ID);
+        if (consoleId != null && this.consoleId != null && this.consoleId.equals(consoleId)) {
+            this.notifierService = notifierService;
+            for (LinkDependencyCallback dependencyCallback : dependencyCallbacks) {
+                dependencyCallback.setNotifierService(notifierService);
+            }
+            for (String notification : notifications) {
+                notifierService.addNotification(notification);
+            }
+            notifications.clear();
         }
-        for (String notification : notifications) {
-            notifierService.addNotification(notification);
-        }
-        notifications.clear();
     }
 
     @Unbind
