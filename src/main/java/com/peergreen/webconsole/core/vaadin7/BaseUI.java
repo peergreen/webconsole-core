@@ -278,6 +278,7 @@ public class BaseUI extends UI implements Serializable {
 
     @Unbind
     public void unbindNotifierService(InternalNotifierService notifierService) {
+        notifierService.clearComponentsForUI(this);
         this.notifierService = null;
     }
 
@@ -293,7 +294,6 @@ public class BaseUI extends UI implements Serializable {
 
     @Invalidate
     public void stop() {
-        notifierService.clearComponentsForUI(this);
         for (Map.Entry<ExtensionFactory, ScopeFactory> scopeFactoryEntry : scopesFactories.entrySet()) {
             ScopeFactory scopeFactory = scopeFactoryEntry.getValue();
             if (scopeFactory.getInstance() != null) {
