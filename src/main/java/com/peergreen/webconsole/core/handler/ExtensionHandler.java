@@ -153,7 +153,9 @@ public class ExtensionHandler extends DependencyHandler {
         for (Map.Entry<ExtensionFactory, InstanceHandle> instance : extensionFactories.entrySet()) {
             instance.getValue().stop();
         }
-        uiContext.getViewNavigator().unregisterNavigableModel((Component) getInstanceManager().getPojoObject());
+        if (uiContext != null) {
+            uiContext.getViewNavigator().unregisterNavigableModel((Component) getInstanceManager().getPojoObject());
+        }
     }
 
     @Bind(aggregate = true, optional = true)
