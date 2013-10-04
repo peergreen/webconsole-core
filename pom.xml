@@ -25,6 +25,13 @@
   <name>Peergreen Web Console :: Core</name>
   <packaging>bundle</packaging>
 
+  <scm>
+    <connection>scm:git:https://forge.peergreen.com/git/git/webconsole/web-console-core.git</connection>
+    <developerConnection>scm:git:https://forge.peergreen.com/git/git/webconsole/web-console-core.git</developerConnection>
+    <url>https://forge.peergreen.com/git/summary/?r=webconsole/web-console-core.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>com.peergreen.webconsole</groupId>
@@ -91,7 +98,7 @@
       <dependency>
         <groupId>com.peergreen.webconsole</groupId>
         <artifactId>web-console-bom</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0-M1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
