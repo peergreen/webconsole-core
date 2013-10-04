@@ -5296,7 +5296,7 @@ body .dashboard.v-app-loading {
 
 .dashboard .help-overlay.login {
 	top: auto !important;
-	bottom: 20px;
+	bottom: 40px;
 }
 
 .dashboard .dashboard-view .v-horizontallayout {
