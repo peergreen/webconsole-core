@@ -34,6 +34,7 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.ow2.util.log.Log;
 import org.ow2.util.log.LogFactory;
 
+import com.vaadin.server.ClientConnector;
 import com.vaadin.server.SessionDestroyEvent;
 import com.vaadin.server.SessionDestroyListener;
 import com.vaadin.server.UIClassSelectionEvent;
@@ -156,11 +157,16 @@ public class BaseUIProvider extends UIProvider {
 
             // Create ipojo component from its factory
             final ComponentInstance instance = factory.createComponentInstance(props);
+            ui.addDetachListener(new ClientConnector.DetachListener() {
+                @Override
+                public void detach(ClientConnector.DetachEvent event) {
+                    stop(instance);
+                }
+            });
             e.getService().addSessionDestroyListener(new SessionDestroyListener() {
                 @Override
                 public void sessionDestroy(SessionDestroyEvent event) {
-                    instance.stop();
-                    instance.dispose();
+                    stop(instance);
                 }
             });
             uis.add(instance);
@@ -172,11 +178,20 @@ public class BaseUIProvider extends UIProvider {
         return ui;
     }
 
+    private void stop(ComponentInstance instance) {
+        if (uis.contains(instance)) {
+            instance.stop();
+            instance.dispose();
+            uis.remove(instance);
+        }
+    }
+
     @Invalidate
     public void stop() {
         for (ComponentInstance instance : uis) {
             instance.stop();
             instance.dispose();
         }
+        uis.clear();
     }
 }
