@@ -20,10 +20,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.felix.ipojo.ComponentInstance;
-import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.Factory;
-import org.apache.felix.ipojo.MissingHandlerException;
-import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -57,7 +54,7 @@ public class ExtensionTracker implements TrackerCustomizer {
 
     private Tracker tracker;
     private BundleContext bundleContext;
-    private Map<ServiceReference, ComponentInstance> instances = new HashMap<>();
+    private final Map<ServiceReference, ComponentInstance> instances = new HashMap<>();
 
     @Requires(from = "com.peergreen.webconsole.core.extension.BaseExtensionFactory")
     private Factory extensionFactory;
@@ -92,6 +89,7 @@ public class ExtensionTracker implements TrackerCustomizer {
     @Invalidate
     public void stop() {
         tracker.close();
+        instances.clear();
     }
 
     @Override
@@ -136,7 +134,7 @@ public class ExtensionTracker implements TrackerCustomizer {
             properties.put(Constants.EXTENSION_ROLES, roles);
             properties.put(Constants.CONSOLE_DOMAINS, domains);
             instances.put(reference, extensionFactory.createComponentInstance(properties));
-        } catch (ClassNotFoundException | MissingHandlerException | ConfigurationException | UnacceptableConfiguration e) {
+        } catch (Throwable e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -154,9 +152,11 @@ public class ExtensionTracker implements TrackerCustomizer {
      */
     @Override
     public void removedService(ServiceReference reference, Object service) {
-        instances.get(reference).stop();
-        instances.get(reference).dispose();
-        instances.remove(reference);
+        if (instances.containsKey(reference)) {
+            instances.get(reference).stop();
+            instances.get(reference).dispose();
+            instances.remove(reference);
+        }
     }
 
 }
